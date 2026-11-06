@@ -1,0 +1,16 @@
+.env
+.env.*
+!.env.example
+.git
+.run
+backups
+storage
+lab/session.json
+voice/models
+**/.venv
+**/node_modules
+**/.next
+**/__pycache__
+**/.pytest_cache
+video-engine
+frontend

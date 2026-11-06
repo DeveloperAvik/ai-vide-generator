@@ -1,0 +1,2 @@
+# n8n
+See `automation/README.md`. Quick path: `make docker-up`, open http://localhost:5678, then `./infrastructure/scripts/import_workflows.sh`. Activate workflows individually. The workflows read `STUDIO_API_URL` and `STUDIO_SERVICE_TOKEN` from the container environment (already wired in compose). Not yet validated against a live n8n instance in this repo's CI — import one workflow first and check the HTTP nodes' URLs.

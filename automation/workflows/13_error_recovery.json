@@ -1,0 +1,170 @@
+{
+  "id": "5b99daec9ba95b6d",
+  "name": "13 Error Recovery",
+  "nodes": [
+    {
+      "id": "7838613e-e5b3-53fa-ae0c-e812956ef2e9",
+      "name": "Every 15 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 15
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "0467f872-16ee-5104-877b-63dea3090004",
+      "name": "Failed lessons",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.STUDIO_API_URL }}/api/lessons?status=FAILED",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.STUDIO_SERVICE_TOKEN }}"
+            },
+            {
+              "name": "Idempotency-Key",
+              "value": "={{ $workflow.name }}-{{ $execution.id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "6835b49a-c9b7-58a7-a230-52e224f42c09",
+      "name": "Under retry limit",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2,
+      "position": [
+        520,
+        0
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "80dfdc7f-7a2a-5603-bb1b-4c7e0ca03913",
+              "leftValue": "={{ $json.retry_count }}",
+              "rightValue": 3,
+              "operator": {
+                "type": "number",
+                "operation": "lt"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "7db0c1cf-e3e6-53fb-9b74-91c2286cd7ff",
+      "name": "Retry from last good stage",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.STUDIO_API_URL }}/api/lessons/{{ $json.id }}/retry",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.STUDIO_SERVICE_TOKEN }}"
+            },
+            {
+              "name": "Idempotency-Key",
+              "value": "={{ $workflow.name }}-{{ $execution.id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    }
+  ],
+  "connections": {
+    "Every 15 min": {
+      "main": [
+        [
+          {
+            "node": "Failed lessons",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Failed lessons": {
+      "main": [
+        [
+          {
+            "node": "Under retry limit",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Under retry limit": {
+      "main": [
+        [
+          {
+            "node": "Retry from last good stage",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "versionId": "9e0271d6-9f3a-5a45-b8ba-318eb44aca00",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

@@ -1,0 +1,121 @@
+{
+  "$defs": {
+    "LessonOutline": {
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "minLength": 3,
+          "title": "Title",
+          "type": "string"
+        },
+        "summary": {
+          "title": "Summary",
+          "type": "string"
+        },
+        "estimated_minutes": {
+          "maximum": 30,
+          "minimum": 1,
+          "title": "Estimated Minutes",
+          "type": "integer"
+        },
+        "dependencies": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Dependencies",
+          "type": "array"
+        },
+        "practical_exercises": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Practical Exercises",
+          "type": "array"
+        },
+        "knowledge_checks": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Knowledge Checks",
+          "type": "array"
+        }
+      },
+      "required": [
+        "title",
+        "summary",
+        "estimated_minutes"
+      ],
+      "title": "LessonOutline",
+      "type": "object"
+    },
+    "ModuleOutline": {
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "description": {
+          "title": "Description",
+          "type": "string"
+        },
+        "lessons": {
+          "items": {
+            "$ref": "#/$defs/LessonOutline"
+          },
+          "minItems": 1,
+          "title": "Lessons",
+          "type": "array"
+        }
+      },
+      "required": [
+        "title",
+        "description",
+        "lessons"
+      ],
+      "title": "ModuleOutline",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "description": {
+      "title": "Description",
+      "type": "string"
+    },
+    "learning_objectives": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Learning Objectives",
+      "type": "array"
+    },
+    "prerequisites": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Prerequisites",
+      "type": "array"
+    },
+    "modules": {
+      "items": {
+        "$ref": "#/$defs/ModuleOutline"
+      },
+      "minItems": 1,
+      "title": "Modules",
+      "type": "array"
+    }
+  },
+  "required": [
+    "description",
+    "learning_objectives",
+    "prerequisites",
+    "modules"
+  ],
+  "title": "Curriculum",
+  "type": "object"
+}

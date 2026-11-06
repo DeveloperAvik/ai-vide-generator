@@ -1,0 +1,5 @@
+# Docker Hub mirror of the official image (docker.n8n.io rate-limits with HTTP 429).
+# After the first successful start, pin an exact tag here (docker compose exec n8n n8n --version) for reproducible builds.
+FROM n8nio/n8n:latest
+# Workflows are imported by infrastructure/scripts/import_workflows.sh (n8n import:workflow); no secrets baked into the image.
+COPY --chown=node:node automation/workflows /workflows

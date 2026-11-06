@@ -1,0 +1,15 @@
+# Changelog
+
+All notable changes are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
+
+## [Unreleased]
+
+### Added
+- First public open-source release preparation: Apache-2.0 `LICENSE` and `NOTICE`, `THIRD_PARTY_NOTICES.md`, `MODEL_AND_ASSET_LICENSES.md`, `OPEN_SOURCE_AUDIT.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, GitHub issue/PR templates and CI, new docs (`configuration`, `video-generation`, `security-model`), `lab/README.md`.
+
+### Changed
+- `docs/` files renamed to lowercase (`architecture.md`, `installation.md`, `animation-engine.md`, `troubleshooting.md`).
+- `scripts/start.sh` now binds the dashboard to `127.0.0.1` (previously all interfaces).
+- `scripts/install_voice.sh` prints a licensing notice (Piper is GPL; the Lessac voice is research-licensed) before downloading.
+- `lab/vuln_app.py` asserts a loopback-only host.
+- `.gitignore` strengthened; added `.gitattributes`.

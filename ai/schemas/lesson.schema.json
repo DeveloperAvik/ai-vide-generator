@@ -1,0 +1,150 @@
+{
+  "$defs": {
+    "QuizQuestion": {
+      "additionalProperties": false,
+      "properties": {
+        "question": {
+          "title": "Question",
+          "type": "string"
+        },
+        "options": {
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "title": "Options",
+          "type": "array"
+        },
+        "answer_index": {
+          "minimum": 0,
+          "title": "Answer Index",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "question",
+        "options",
+        "answer_index"
+      ],
+      "title": "QuizQuestion",
+      "type": "object"
+    },
+    "Reference": {
+      "additionalProperties": false,
+      "properties": {
+        "title": {
+          "title": "Title",
+          "type": "string"
+        },
+        "url": {
+          "title": "Url",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "url"
+      ],
+      "title": "Reference",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "title": {
+      "title": "Title",
+      "type": "string"
+    },
+    "hook": {
+      "title": "Hook",
+      "type": "string"
+    },
+    "introduction": {
+      "title": "Introduction",
+      "type": "string"
+    },
+    "learning_objectives": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Learning Objectives",
+      "type": "array"
+    },
+    "technical_explanation": {
+      "title": "Technical Explanation",
+      "type": "string"
+    },
+    "practical_demonstration": {
+      "title": "Practical Demonstration",
+      "type": "string"
+    },
+    "diagrams": {
+      "description": "Mermaid sources",
+      "items": {
+        "type": "string"
+      },
+      "title": "Diagrams",
+      "type": "array"
+    },
+    "real_world_applications": {
+      "title": "Real World Applications",
+      "type": "string"
+    },
+    "defensive_recommendations": {
+      "title": "Defensive Recommendations",
+      "type": "string"
+    },
+    "common_mistakes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Common Mistakes",
+      "type": "array"
+    },
+    "knowledge_check": {
+      "items": {
+        "$ref": "#/$defs/QuizQuestion"
+      },
+      "minItems": 1,
+      "title": "Knowledge Check",
+      "type": "array"
+    },
+    "summary": {
+      "title": "Summary",
+      "type": "string"
+    },
+    "references": {
+      "items": {
+        "$ref": "#/$defs/Reference"
+      },
+      "title": "References",
+      "type": "array"
+    },
+    "unverified_claims": {
+      "description": "Facts needing human verification",
+      "items": {
+        "type": "string"
+      },
+      "title": "Unverified Claims",
+      "type": "array"
+    }
+  },
+  "required": [
+    "title",
+    "hook",
+    "introduction",
+    "learning_objectives",
+    "technical_explanation",
+    "practical_demonstration",
+    "diagrams",
+    "real_world_applications",
+    "defensive_recommendations",
+    "common_mistakes",
+    "knowledge_check",
+    "summary",
+    "references"
+  ],
+  "title": "LessonScriptData",
+  "type": "object"
+}

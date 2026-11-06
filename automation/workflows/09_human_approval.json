@@ -1,0 +1,225 @@
+{
+  "id": "632424285139525e",
+  "name": "09 Human Approval",
+  "nodes": [
+    {
+      "id": "80864982-49e9-5fde-8750-51572c107b90",
+      "name": "Every 30 min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 30
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "b9a6049b-774d-5868-a405-c813c633ea84",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        200
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "studio/approval-request",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "webhookId": "e25c2dec-14ff-551f-bd95-2bc3bab21a09"
+    },
+    {
+      "id": "e106281c-3315-5f7c-acbe-6600d3e1251d",
+      "name": "Get approval queue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        100
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.STUDIO_API_URL }}/api/approvals/queue",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.STUDIO_SERVICE_TOKEN }}"
+            },
+            {
+              "name": "Idempotency-Key",
+              "value": "={{ $workflow.name }}-{{ $execution.id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "e51b20f9-553e-5272-9c9b-3588fb5143e9",
+      "name": "Anything pending?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        520,
+        100
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "c3525ecd-02b5-5a3d-af62-d3463e76d882",
+              "leftValue": "={{ $input.all().length }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "dae8b2dd-f72e-56bf-9038-808a490dcb6f",
+      "name": "Notify configured?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        760,
+        20
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "d716c18c-a643-557a-9106-ab774663ba01",
+              "leftValue": "={{ $env.NOTIFY_WEBHOOK_URL }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "6ce73b58-403f-51db-86c3-ba27d2c7c5bf",
+      "name": "Notify reviewers",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1000,
+        20
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.NOTIFY_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: \"[Cyber Studio] \" + $(\"Get approval queue\").all().length + \" item(s) awaiting human approval: \" + ($env.STUDIO_DASHBOARD_URL ?? \"\") + \"/approvals\", content: \"[Cyber Studio] \" + $(\"Get approval queue\").all().length + \" item(s) awaiting human approval: \" + ($env.STUDIO_DASHBOARD_URL ?? \"\") + \"/approvals\" }) }}"
+      },
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "Every 30 min": {
+      "main": [
+        [
+          {
+            "node": "Get approval queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Get approval queue",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get approval queue": {
+      "main": [
+        [
+          {
+            "node": "Anything pending?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anything pending?": {
+      "main": [
+        [
+          {
+            "node": "Notify configured?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify configured?": {
+      "main": [
+        [
+          {
+            "node": "Notify reviewers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "versionId": "5a2c1b85-10cc-5c81-be59-c9f812557bc5",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

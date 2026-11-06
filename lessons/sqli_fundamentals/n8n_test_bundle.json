@@ -1,0 +1,226 @@
+{
+  "course_name": "n8n Connectivity Tests",
+  "module_title": "n8n Connectivity Tests",
+  "lesson_title": "n8n Pipeline Test Lesson",
+  "summary": "n8n connectivity test fixture (not for publication): SQL injection root cause, safe localhost lab demo and fix.",
+  "script": {
+    "title": "n8n Pipeline Test Lesson",
+    "hook": "A single apostrophe in a search box is sometimes all it takes to expose an entire database. Today we look at SQL injection: why it happens, how to test for it safely in a lab, and how to fix it for good.",
+    "introduction": "By the end of this lesson, you will be able to explain the root cause of SQL injection, recognize vulnerable code, demonstrate the issue against an intentionally vulnerable application on your own machine, and apply the correct defense. Everything you see today runs on localhost, against a lab application written for this lesson, with fake data. Only ever test systems you own, or have written permission to test.",
+    "learning_objectives": [
+      "Explain the root cause of SQL injection",
+      "Recognize vulnerable query construction",
+      "Demonstrate it safely against a local lab app",
+      "Apply parameterized queries and layered defenses"
+    ],
+    "technical_explanation": "SQL injection is a failure to separate code from data. The application builds a query as a string, and pastes user input into the middle of it. The database receives one string, and has no way to know which part the developer wrote and which part the user supplied. If the input contains SQL syntax, such as a quote, that syntax is parsed as part of the query. Injection has been in the OWASP Top 10 for many years, and sits third in the twenty twenty-one edition. The weakness is catalogued as C W E eighty-nine. Here is the data flow. User input travels to the application. If the query is built by string concatenation, the input becomes part of the SQL text, and can change the meaning of the query. If the application uses a parameterized query, the structure is sent first and the values travel separately, so the input can only ever be data.",
+    "practical_demonstration": "Now the lab. First, a normal search for laptop returns two products, as expected. Next, I send a single apostrophe. The server answers with a five hundred error, and the message comes straight from the database engine: unrecognized token. That tells us our input reached the SQL parser and broke the syntax. It is a strong signal, though not proof of exploitability by itself, and it is also information a production application should never reveal to users. Now we close the string ourselves. The payload ends the pattern with a percent sign and a quote, adds an always true condition, and uses two dashes to comment out the rest of the query. Every product is returned, even though none matches that name. The same idea against the login endpoint: a username of admin followed by a quote and a comment removes the password check entirely, and the application logs us in as admin. Notice that the payload depends on context. My first attempt, copied from habit, returned nothing, because of how the input sat inside the LIKE pattern. Understanding the query structure matters more than memorizing strings. Now the same payload against the fixed endpoint, which uses a bound parameter. The result is empty. The database searched for a product whose name literally contains that text, and found none. The input stayed data.",
+    "diagrams": [
+      "flowchart LR\n  A[User input] --> B[Application builds query]\n  B -- Concatenation --> C[Input parsed as SQL]\n  B -- Parameters --> D[Input stays data]\n  C --> E[Query meaning changed]"
+    ],
+    "real_world_applications": "When you find an injection issue in a penetration test or a bug bounty program, the useful report contains the root cause, the affected parameter, a safe proof of concept, and the recommended fix. It does not contain a data dump. Proving that the query can be changed is enough, and extracting real user data is usually out of scope and can break the rules of the program.",
+    "defensive_recommendations": "Parameterized queries are the primary defense. They apply to O R Ms as well, and to stored procedures, provided the procedure itself does not build dynamic SQL from strings. Then add layers around that. Run the application's database account with least privilege, so a flaw cannot read unrelated tables or change the schema. Validate input against an allow list where the format is known, such as numeric identifiers. Return generic error messages to users and log the details on the server. A web application firewall can reduce noise, but treat it as a speed bump, not a fix.",
+    "common_mistakes": [
+      "Blacklist filtering",
+      "Manual escaping instead of parameters",
+      "Concatenating identifiers from user input",
+      "Testing without written authorization"
+    ],
+    "knowledge_check": [
+      {
+        "question": "Which is the best protection against SQL injection?",
+        "options": [
+          "Blacklist filtering",
+          "Parameterized queries",
+          "Hiding error messages",
+          "Longer passwords"
+        ],
+        "answer_index": 1
+      }
+    ],
+    "summary": "To summarize. SQL injection happens when user input is concatenated into a query. You can confirm it safely in a lab by observing errors and changed results. The fix is parameterized queries, backed by least privilege, allow list validation, and quiet error handling. Practice only on intentionally vulnerable applications that you control, like the one in this lesson.",
+    "references": [
+      {
+        "title": "OWASP Top 10:2021 - A03 Injection",
+        "url": "https://owasp.org/Top10/A03_2021-Injection/"
+      },
+      {
+        "title": "OWASP SQL Injection Prevention Cheat Sheet",
+        "url": "https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html"
+      },
+      {
+        "title": "CWE-89: Improper Neutralization of Special Elements used in an SQL Command",
+        "url": "https://cwe.mitre.org/data/definitions/89.html"
+      }
+    ],
+    "unverified_claims": []
+  },
+  "storyboard": {
+    "lesson_title": "n8n Pipeline Test Lesson",
+    "scenes": [
+      {
+        "scene_id": "scene_001",
+        "type": "instructor",
+        "duration_seconds": 18.8,
+        "narration": "A single apostrophe in a search box is sometimes all it takes to expose an entire database. Today we look at SQL injection: why it happens, how to test for it safely in a lab, and how to fix it for good.",
+        "visual_description": "n8n Pipeline Test Lesson",
+        "on_screen_text": "n8n Pipeline Test Lesson",
+        "asset_requirements": [],
+        "transition": "fade"
+      },
+      {
+        "scene_id": "scene_002",
+        "type": "slide",
+        "duration_seconds": 30.5,
+        "narration": "By the end of this lesson, you will be able to explain the root cause of SQL injection, recognize vulnerable code, demonstrate the issue against an intentionally vulnerable application on your own machine, and apply the correct defense. Everything you see today runs on localhost, against a lab application written for this lesson, with fake data. Only ever test systems you own, or have written permission to test.",
+        "visual_description": "Learning Objectives",
+        "on_screen_text": "Learning Objectives",
+        "asset_requirements": [],
+        "transition": "fade",
+        "bullets": [
+          "Explain the root cause",
+          "Recognize vulnerable code",
+          "Demonstrate safely in a lab",
+          "Apply the correct defense"
+        ]
+      },
+      {
+        "scene_id": "scene_003",
+        "type": "slide",
+        "duration_seconds": 43.0,
+        "narration": "SQL injection is a failure to separate code from data. The application builds a query as a string, and pastes user input into the middle of it. The database receives one string, and has no way to know which part the developer wrote and which part the user supplied. If the input contains SQL syntax, such as a quote, that syntax is parsed as part of the query. Injection has been in the OWASP Top 10 for many years, and sits third in the twenty twenty-one edition. The weakness is catalogued as C W E eighty-nine.",
+        "visual_description": "The Root Cause",
+        "on_screen_text": "The Root Cause",
+        "asset_requirements": [],
+        "transition": "slide",
+        "bullets": [
+          "Query built as a string",
+          "User input pasted into the middle",
+          "Database cannot tell code from data",
+          "OWASP Top 10: A03 Injection \u00b7 CWE-89"
+        ]
+      },
+      {
+        "scene_id": "scene_004",
+        "type": "diagram",
+        "duration_seconds": 26.9,
+        "narration": "Here is the data flow. User input travels to the application. If the query is built by string concatenation, the input becomes part of the SQL text, and can change the meaning of the query. If the application uses a parameterized query, the structure is sent first and the values travel separately, so the input can only ever be data.",
+        "visual_description": "Where Input Goes",
+        "on_screen_text": "Where Input Goes",
+        "asset_requirements": [],
+        "transition": "fade",
+        "mermaid": "flowchart LR\n  A[User input] --> B[Application builds query]\n  B -- Concatenation --> C[Input parsed as SQL]\n  B -- Parameters --> D[Input stays data]\n  C --> E[Query meaning changed]"
+      },
+      {
+        "scene_id": "scene_005",
+        "type": "code",
+        "duration_seconds": 17.5,
+        "narration": "This is the lab application's search handler. Look at the query. The search term is concatenated directly into the SQL string, between the percent signs of a LIKE clause. Nothing stops the user from closing that string literal themselves.",
+        "visual_description": "Vulnerable Code",
+        "on_screen_text": "Vulnerable Code",
+        "asset_requirements": [],
+        "transition": "fade",
+        "code": "# VULNERABLE: string concatenation\nsql = \"SELECT name, price FROM products WHERE name LIKE '%\" + q + \"%'\"\nrows = db.execute(sql).fetchall()",
+        "language": "python"
+      },
+      {
+        "scene_id": "scene_006",
+        "type": "terminal",
+        "duration_seconds": 34.5,
+        "narration": "Now the lab. First, a normal search for laptop returns two products, as expected. Next, I send a single apostrophe. The server answers with a five hundred error, and the message comes straight from the database engine: unrecognized token. That tells us our input reached the SQL parser and broke the syntax. It is a strong signal, though not proof of exploitability by itself, and it is also information a production application should never reveal to users.",
+        "visual_description": "Lab: Probing the Parameter",
+        "on_screen_text": "Lab: Probing the Parameter",
+        "asset_requirements": [],
+        "transition": "slide",
+        "recording_asset": "lab_a.mp4",
+        "terminal_lines": [
+          "$ GET /search?q=laptop",
+          "200 {\"results\": [[\"laptop\", 899.0], [\"laptop bag\", 29.0]]}",
+          "$ GET /search?q='",
+          "500 {\"error\": \"unrecognized token: \\\"'\\\"\"}"
+        ]
+      },
+      {
+        "scene_id": "scene_007",
+        "type": "terminal",
+        "duration_seconds": 49.3,
+        "narration": "Now we close the string ourselves. The payload ends the pattern with a percent sign and a quote, adds an always true condition, and uses two dashes to comment out the rest of the query. Every product is returned, even though none matches that name. The same idea against the login endpoint: a username of admin followed by a quote and a comment removes the password check entirely, and the application logs us in as admin. Notice that the payload depends on context. My first attempt, copied from habit, returned nothing, because of how the input sat inside the LIKE pattern. Understanding the query structure matters more than memorizing strings.",
+        "visual_description": "Lab: Changing the Query",
+        "on_screen_text": "Lab: Changing the Query",
+        "asset_requirements": [],
+        "transition": "fade",
+        "recording_asset": "lab_b.mp4",
+        "terminal_lines": [
+          "$ GET /search?q=zzz%' OR 1=1--",
+          "200 {\"results\": [[\"laptop\", 899.0], [\"laptop bag\", 29.0], [\"monitor\", 199.0]]}",
+          "$ GET /login?user=admin'--&pass=x",
+          "200 {\"user\": \"admin\", \"role\": \"admin\"}"
+        ]
+      },
+      {
+        "scene_id": "scene_008",
+        "type": "terminal",
+        "duration_seconds": 16.1,
+        "narration": "Now the same payload against the fixed endpoint, which uses a bound parameter. The result is empty. The database searched for a product whose name literally contains that text, and found none. The input stayed data.",
+        "visual_description": "Lab: The Fixed Endpoint",
+        "on_screen_text": "Lab: The Fixed Endpoint",
+        "asset_requirements": [],
+        "transition": "fade",
+        "recording_asset": "lab_c.mp4",
+        "terminal_lines": [
+          "$ GET /safe/search?q=zzz%' OR 1=1--",
+          "200 {\"results\": []}"
+        ]
+      },
+      {
+        "scene_id": "scene_009",
+        "type": "code",
+        "duration_seconds": 18.4,
+        "narration": "Here is the fix. The query text contains a parameter marker, and the value is passed separately to the database driver. The driver and the database keep structure and data apart, so no input can change the shape of the query.",
+        "visual_description": "The Fix: Parameters",
+        "on_screen_text": "The Fix: Parameters",
+        "asset_requirements": [],
+        "transition": "slide",
+        "code": "# SAFE: bound parameter\nsql = \"SELECT name, price FROM products WHERE name LIKE ?\"\nrows = db.execute(sql, (\"%\" + q + \"%\",)).fetchall()",
+        "language": "python"
+      },
+      {
+        "scene_id": "scene_010",
+        "type": "quiz",
+        "duration_seconds": 24.2,
+        "narration": "Quick check. Your application must let users search products by name. Which is the best protection against SQL injection? A, blacklist filtering. B, parameterized queries. C, hiding error messages. Or D, longer passwords. Pause the video and decide. The answer is B, parameterized queries. Hiding errors helps, but it does not remove the flaw.",
+        "visual_description": "Knowledge Check",
+        "on_screen_text": "Knowledge Check",
+        "asset_requirements": [],
+        "transition": "fade",
+        "bullets": [
+          "A) Blacklist filtering",
+          "B) Parameterized queries",
+          "C) Hiding error messages",
+          "D) Longer passwords"
+        ]
+      },
+      {
+        "scene_id": "scene_011",
+        "type": "summary",
+        "duration_seconds": 26.0,
+        "narration": "To summarize. SQL injection happens when user input is concatenated into a query. You can confirm it safely in a lab by observing errors and changed results. The fix is parameterized queries, backed by least privilege, allow list validation, and quiet error handling. Practice only on intentionally vulnerable applications that you control, like the one in this lesson.",
+        "visual_description": "Summary",
+        "on_screen_text": "Summary",
+        "asset_requirements": [],
+        "transition": "fade",
+        "bullets": [
+          "Concatenation is the root cause",
+          "Parameterize every query",
+          "Layer: least privilege, validation, quiet errors",
+          "Practice only in authorized labs"
+        ]
+      }
+    ]
+  },
+  "recordings": {
+    "scene_006": "storage/lab_clips/lab_a.mp4",
+    "scene_007": "storage/lab_clips/lab_b.mp4",
+    "scene_008": "storage/lab_clips/lab_c.mp4"
+  }
+}

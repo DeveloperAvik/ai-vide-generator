@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+:root {
+  color-scheme: dark;
+  --canvas: 9 11 17; --surface: 15 18 26; --raised: 22 26 37; --line: 38 44 60;
+  --brand-400: 129 140 248; --brand-500: 99 102 241; --brand-600: 79 70 229;
+  --slate-50: 248 250 252; --slate-100: 241 245 249; --slate-200: 226 232 240; --slate-300: 203 213 225; --slate-400: 148 163 184; --slate-500: 100 116 139;
+  --slate-600: 71 85 105; --slate-700: 51 65 85; --slate-800: 30 41 59; --slate-900: 15 23 42; --slate-950: 2 6 23;
+  --shadow-card: 0 1px 0 0 rgba(255,255,255,.03) inset, 0 8px 24px -14px rgba(0,0,0,.65);
+  --glow: radial-gradient(900px 420px at 75% -12%, rgba(99,102,241,.10), transparent 60%);
+}
+/* Light theme: the slate scale is inverted so existing text-slate-* utilities stay readable. */
+:root.light {
+  color-scheme: light;
+  --canvas: 244 245 248; --surface: 255 255 255; --raised: 240 242 246; --line: 223 227 235;
+  --brand-400: 67 56 202; --brand-500: 79 70 229; --brand-600: 55 48 163;
+  --slate-50: 15 23 42; --slate-100: 30 41 59; --slate-200: 51 65 85; --slate-300: 71 85 105; --slate-400: 100 116 139; --slate-500: 100 116 139;
+  --slate-600: 148 163 184; --slate-700: 203 213 225; --slate-800: 226 232 240; --slate-900: 241 245 249; --slate-950: 248 250 252;
+  --shadow-card: 0 1px 2px rgba(15,23,42,.05), 0 6px 18px -10px rgba(15,23,42,.12);
+  --glow: radial-gradient(900px 420px at 75% -12%, rgba(99,102,241,.08), transparent 60%);
+}
+html { -webkit-font-smoothing: antialiased; }
+body { background: var(--glow), rgb(var(--canvas)); color: rgb(var(--slate-200)); font-feature-settings: "cv11", "ss01"; }
+.tnum { font-variant-numeric: tabular-nums; }
+input, textarea, select { background: rgb(var(--surface)); border: 1px solid rgb(var(--line)); border-radius: .6rem; padding: .5rem .75rem; color: inherit; width: 100%; font-size: .875rem; transition: border-color .15s, box-shadow .15s; }
+input::placeholder, textarea::placeholder { color: rgb(var(--slate-500)); }
+input:focus, textarea:focus, select:focus { outline: none; border-color: rgb(var(--brand-500)); box-shadow: 0 0 0 3px rgb(var(--brand-500) / .2); }
+:focus-visible { outline: 2px solid rgb(var(--brand-500)); outline-offset: 2px; }
+::-webkit-scrollbar { width: 10px; height: 10px; } ::-webkit-scrollbar-thumb { background: rgb(var(--line)); border-radius: 10px; } ::-webkit-scrollbar-track { background: transparent; }
+/* Light theme: pale status text colours become darker shades */
+.light .text-sky-200, .light .text-sky-300 { color: #0369a1; } .light .text-emerald-200, .light .text-emerald-300 { color: #047857; }
+.light .text-rose-200, .light .text-rose-300 { color: #be123c; } .light .text-amber-200, .light .text-amber-300 { color: #b45309; }
+.light .text-rose-300\/80 { color: rgb(190 18 60 / .85); }
+@media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }

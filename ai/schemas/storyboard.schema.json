@@ -1,0 +1,177 @@
+{
+  "$defs": {
+    "Scene": {
+      "additionalProperties": false,
+      "properties": {
+        "scene_id": {
+          "pattern": "^scene_\\d{3}$",
+          "title": "Scene Id",
+          "type": "string"
+        },
+        "type": {
+          "enum": [
+            "instructor",
+            "slide",
+            "diagram",
+            "code",
+            "terminal",
+            "browser",
+            "quiz",
+            "summary"
+          ],
+          "title": "Type",
+          "type": "string"
+        },
+        "duration_seconds": {
+          "maximum": 120,
+          "minimum": 2,
+          "title": "Duration Seconds",
+          "type": "number"
+        },
+        "narration": {
+          "minLength": 1,
+          "title": "Narration",
+          "type": "string"
+        },
+        "visual_description": {
+          "title": "Visual Description",
+          "type": "string"
+        },
+        "on_screen_text": {
+          "default": "",
+          "title": "On Screen Text",
+          "type": "string"
+        },
+        "asset_requirements": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Asset Requirements",
+          "type": "array"
+        },
+        "transition": {
+          "default": "fade",
+          "enum": [
+            "fade",
+            "slide",
+            "wipe",
+            "zoom",
+            "none"
+          ],
+          "title": "Transition",
+          "type": "string"
+        },
+        "code": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Code"
+        },
+        "language": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Language"
+        },
+        "terminal_lines": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Terminal Lines"
+        },
+        "mermaid": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Mermaid"
+        },
+        "bullets": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Bullets"
+        },
+        "recording_asset": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "description": "Filename of an attached lab recording",
+          "title": "Recording Asset"
+        }
+      },
+      "required": [
+        "scene_id",
+        "type",
+        "duration_seconds",
+        "narration",
+        "visual_description"
+      ],
+      "title": "Scene",
+      "type": "object"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "lesson_title": {
+      "title": "Lesson Title",
+      "type": "string"
+    },
+    "scenes": {
+      "items": {
+        "$ref": "#/$defs/Scene"
+      },
+      "minItems": 2,
+      "title": "Scenes",
+      "type": "array"
+    }
+  },
+  "required": [
+    "lesson_title",
+    "scenes"
+  ],
+  "title": "StoryboardData",
+  "type": "object"
+}

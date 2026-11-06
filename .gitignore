@@ -1,0 +1,65 @@
+# --- secrets & local config (never commit) ---
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+client_secret*.json
+youtube_token.json
+automation/credentials.json
+storage/runtime_config.json
+storage/youtube_token.json
+
+# --- generated output, backups, logs, dumps ---
+storage/*
+!storage/local/
+storage/local/*
+!storage/local/.gitkeep
+!storage/manifests/
+storage/manifests/*
+!storage/manifests/.gitkeep
+backups/
+*.sql
+*.sql.gz
+*.dump
+*.tgz
+*.log
+*.pid
+.run/
+lab/session.json
+
+# --- models & media (download/generate locally; see MODEL_AND_ASSET_LICENSES.md) ---
+voice/models/
+*.onnx
+*.mp4
+*.mov
+*.webm
+*.wav
+*.mp3
+# auto-generated placeholder portrait (visuals.default_portrait); bring your own if wanted
+avatar/assets/instructor.png
+
+# --- dependencies, build output, caches ---
+node_modules/
+.next/
+out/
+.venv/
+venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.tsbuildinfo
+.cache/
+.turbo/
+
+# --- editor / OS / tooling ---
+.DS_Store
+.idea/
+.vscode/
+.claude/
+*.swp
+
+# --- one-off local dev scripts ---
+backend/_run_next_*.py

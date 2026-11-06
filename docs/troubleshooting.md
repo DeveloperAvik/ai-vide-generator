@@ -1,0 +1,14 @@
+# Troubleshooting
+- **`ANTHROPIC_API_KEY not set`** – Claude Pro isn't an API key; see API_SETUP.md.
+- **Lesson FAILED** – read `last_error` and the *System Health* log; press Retry (resumes at last good stage, max 3; admin `POST /api/lessons/{id}/reset` clears the counter).
+- **`sensitive data detected in storyboard`** – remove the flagged key/email/IP from scene text.
+- **`could not be verified in NVD`** – delete or manually verify the CVE reference; the pipeline never accepts unverified CVE claims.
+- **Remotion first render slow/fails** – it downloads Chrome Headless Shell; needs network. Use `RENDER_ENGINE=ffmpeg` meanwhile.
+- **FFmpeg lacks libass/drawtext** – not needed; captions are drawn with Pillow.
+- **429** – rate limiter (login: 10/min).
+- **`DEMO CANNOT RUN: no local voice provider`** (Kokoro default) – download `kokoro-v1.0.onnx` and `voices-v1.0.bin` into `voice/models/kokoro/` (see `voice/README.md`), or set `VOICE_PROVIDER=macos_say` on macOS for development.
+- **`APP_ENV=production requires SECRET_KEY of at least 32 chars`** – generate one: `openssl rand -hex 32`.
+- **`wildcard CORS not allowed in production`** – set `CORS_ORIGINS` to your dashboard origin.
+- **Database connection errors** – check Postgres is running (`pg_isready`) and `DATABASE_URL` in `.env`; the tests use their own temporary SQLite database and need no Postgres.
+- **Dashboard unreachable on another machine** – `scripts/start.sh` deliberately binds the API and dashboard to `127.0.0.1`. Use a reverse proxy (`infrastructure/nginx/studio.conf`) with TLS if you really need remote access.
+- **Docker/n8n problems** – the Docker path is only partly verified; see `DEVELOPMENT_STATUS.md` and report issues with logs (redact secrets).

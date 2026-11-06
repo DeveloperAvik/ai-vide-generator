@@ -1,0 +1,87 @@
+{
+  "id": "00fc4ad468eb5220",
+  "name": "12 Analytics Collector",
+  "nodes": [
+    {
+      "id": "fc3c52b4-0151-5e3b-9b1b-a5d35ede1032",
+      "name": "Daily 06:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 6 * * *"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "4990885c-0d7c-5ce4-8435-35cbb7fd7f95",
+      "name": "Collect analytics",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.STUDIO_API_URL }}/api/analytics/collect",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.STUDIO_SERVICE_TOKEN }}"
+            },
+            {
+              "name": "Idempotency-Key",
+              "value": "={{ $workflow.name }}-{{ $execution.id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={}"
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    }
+  ],
+  "connections": {
+    "Daily 06:00": {
+      "main": [
+        [
+          {
+            "node": "Collect analytics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "versionId": "8fb7597b-abbc-59a7-a596-94b04adf7752",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

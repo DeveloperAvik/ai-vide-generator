@@ -1,0 +1,156 @@
+{
+  "id": "d72bf1fbe32b5e4d",
+  "name": "11 YouTube Scheduler",
+  "nodes": [
+    {
+      "id": "2da5daa5-9517-5f8d-b5b5-069a1fe347b5",
+      "name": "Mon Wed Fri 09:00",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9 * * 1,3,5"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "952caa5b-95c7-51a3-85c1-7a518fef4a96",
+      "name": "Approved lessons",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $env.STUDIO_API_URL }}/api/lessons?status=APPROVED",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.STUDIO_SERVICE_TOKEN }}"
+            },
+            {
+              "name": "Idempotency-Key",
+              "value": "={{ $workflow.name }}-{{ $execution.id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        }
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "57e13265-3c6d-59bd-98f7-d3d31efb6742",
+      "name": "Take first",
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        520,
+        0
+      ],
+      "parameters": {
+        "maxItems": 1
+      }
+    },
+    {
+      "id": "96d45685-15cb-58b3-8cc2-7cd1298df1fe",
+      "name": "Upload private + schedule",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        780,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.STUDIO_API_URL }}/api/lessons/{{ $json.id }}/youtube/publish",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.STUDIO_SERVICE_TOKEN }}"
+            },
+            {
+              "name": "Idempotency-Key",
+              "value": "={{ $workflow.name }}-{{ $execution.id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ publish_at: new Date(Date.now() + 48*3600*1000).toISOString() }) }}"
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    }
+  ],
+  "connections": {
+    "Mon Wed Fri 09:00": {
+      "main": [
+        [
+          {
+            "node": "Approved lessons",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Approved lessons": {
+      "main": [
+        [
+          {
+            "node": "Take first",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Take first": {
+      "main": [
+        [
+          {
+            "node": "Upload private + schedule",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "versionId": "6c6154ba-8c79-54de-a0d8-77ff53e22a36",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}

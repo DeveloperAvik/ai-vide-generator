@@ -1,0 +1,10 @@
+title = "cyber-ai-studio"
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Dummy fixtures that test the redaction code"
+paths = [
+  '''backend/tests/test_api_and_models\.py''',
+  '''backend/tests/test_security\.py''',
+]

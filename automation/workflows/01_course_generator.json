@@ -1,0 +1,262 @@
+{
+  "id": "824e13a7d3475199",
+  "name": "01 Course Generator",
+  "nodes": [
+    {
+      "id": "b9a6049b-774d-5868-a405-c813c633ea84",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "studio/course-generate",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "webhookId": "2012a851-7f8e-52ef-a2f7-e8c99e274c2b"
+    },
+    {
+      "id": "15897123-7d78-588f-8a67-5d61d3047952",
+      "name": "Call Studio API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        260,
+        0
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.STUDIO_API_URL }}/api/courses/generate",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.STUDIO_SERVICE_TOKEN }}"
+            },
+            {
+              "name": "Idempotency-Key",
+              "value": "={{ $workflow.name }}-{{ $execution.id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ course_name: $json.body.course_name, language: $json.body.language ?? \"English\", difficulty: $json.body.difficulty ?? \"Intermediate\", target_audience: $json.body.target_audience ?? \"Cybersecurity students\", videos_per_week: $json.body.videos_per_week ?? 3, duration_minutes: $json.body.duration_minutes ?? 8 }) }}"
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "id": "3a4799bb-7470-53dc-8f60-8af0b17ad293",
+      "name": "Respond OK",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        520,
+        -80
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify($json) }}",
+        "options": {
+          "responseCode": 200
+        }
+      }
+    },
+    {
+      "id": "5096504c-0e11-575f-af3b-6ba6f856374b",
+      "name": "Log failure",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        520,
+        120
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.STUDIO_API_URL }}/api/internal/log",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "=Bearer {{ $env.STUDIO_SERVICE_TOKEN }}"
+            },
+            {
+              "name": "Idempotency-Key",
+              "value": "={{ $workflow.name }}-{{ $execution.id }}"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 120000
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ stage: \"n8n:course_generator\", level: \"error\", lesson_id: $(\"Webhook\").item.json.body.lesson_id ?? null, message: JSON.stringify($json).slice(0, 1500) }) }}"
+      },
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000
+    },
+    {
+      "id": "dae8b2dd-f72e-56bf-9038-808a490dcb6f",
+      "name": "Notify configured?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [
+        760,
+        120
+      ],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "d716c18c-a643-557a-9106-ab774663ba01",
+              "leftValue": "={{ $env.NOTIFY_WEBHOOK_URL }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "d93f8c90-7964-5550-8429-99c9345e35c1",
+      "name": "Notify failure",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1000,
+        40
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.NOTIFY_WEBHOOK_URL }}",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ text: \"[Cyber Studio] course_generator failed for lesson \" + ($(\"Webhook\").item.json.body.lesson_id ?? \"?\"), content: \"[Cyber Studio] course_generator failed for lesson \" + ($(\"Webhook\").item.json.body.lesson_id ?? \"?\") }) }}"
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "id": "06188290-94c0-52f9-953b-c9749326820d",
+      "name": "Respond Error",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [
+        1240,
+        120
+      ],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ JSON.stringify({ error: \"stage failed\", stage: \"course_generator\" }) }}",
+        "options": {
+          "responseCode": 502
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Call Studio API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Studio API": {
+      "main": [
+        [
+          {
+            "node": "Respond OK",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log failure": {
+      "main": [
+        [
+          {
+            "node": "Notify configured?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify configured?": {
+      "main": [
+        [
+          {
+            "node": "Notify failure",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Respond Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notify failure": {
+      "main": [
+        [
+          {
+            "node": "Respond Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all"
+  },
+  "versionId": "f5bf72f4-af8a-5c90-a1f3-a44a497d976c",
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "tags": []
+}
