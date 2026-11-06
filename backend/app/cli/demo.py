@@ -42,7 +42,11 @@ def main():
         if not course:
             course = generation.generate_curriculum(db, CurriculumRequest(course_name="Demo: Web Application Penetration Testing"), get_llm("mock"))
             db.commit()
-        lesson = next(l for m in course.modules for l in m.lessons if l.title == "SQL Injection Fundamentals")
+        lesson = next((l for m in course.modules for l in m.lessons if l.title == "SQL Injection Fundamentals"), None)
+        if lesson is None:  # the offline mock curriculum is generic; give the demo its topic on a fresh database
+            lesson = course.modules[0].lessons[0]
+            lesson.title = "SQL Injection Fundamentals"
+            db.commit()
         print(f"lesson {lesson.id}: {lesson.title} [{lesson.status.value}]")
         if lesson.status == S.FAILED or lesson.status.value in ("TOPIC_PENDING", "RESEARCHING", "SCRIPT_GENERATED"):
             pipeline.resume(db, lesson, llm=get_llm("mock"), online=a.online)

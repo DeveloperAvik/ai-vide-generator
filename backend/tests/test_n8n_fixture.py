@@ -3,6 +3,8 @@ import json
 import os
 from pathlib import Path
 
+import pytest
+
 from app.models import Course, Lesson, Module
 from app.schemas.content import LessonScriptData, StoryboardData
 from app.services import generation, lengthplan, qualitygate
@@ -53,8 +55,10 @@ def test_storyboard_has_demo_quiz_and_closing_summary():
 
 def test_recordings_exist_on_disk():
     b, _, _ = _load()
-    for p in b["recordings"].values():
-        assert (ROOT / p).exists(), p
+    missing = [p for p in b["recordings"].values() if not (ROOT / p).exists()]
+    if missing and not (ROOT / "storage" / "lab_clips").exists():
+        pytest.skip("lab clips are generated, gitignored media (storage/lab_clips); run the lab scripts to create them")
+    assert not missing, missing
 
 
 def test_real_quality_gate_accepts_the_storyboard_without_mock_exemptions(db):

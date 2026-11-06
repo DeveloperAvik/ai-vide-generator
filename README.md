@@ -87,7 +87,7 @@ cd backend && .venv/bin/python -m pytest -q          # 307 tests, temporary SQLi
 cd frontend && npx tsc --noEmit                       # dashboard typecheck
 cd video-engine && npx tsc --noEmit                   # video engine typecheck
 ```
-Not covered by automated tests: live LLM/TTS/avatar/YouTube services, Docker + n8n end to end, the dashboard UI (no frontend tests yet).
+The 6 real-Remotion render tests skip until Chrome Headless Shell is downloaded (`REMOTION_RENDER_TESTS=1 .venv/bin/python -m pytest tests/test_motion_render.py` to opt in). Not covered by automated tests: live LLM/TTS/avatar/YouTube services, Docker + n8n end to end, the dashboard UI (no frontend tests yet).
 
 ## Security considerations
 Strict schema validation · no LLM text is executed · argv-only subprocess allow-list · CVE/CVSS claims verified · secret/PII scan of scene text · uploads need a recorded human approval and default to private · the n8n service token cannot approve · rate limiting · audit log. Known limitations (e.g. JWT in `localStorage`) are listed in [docs/security-model.md](docs/security-model.md). Report vulnerabilities privately: [SECURITY.md](SECURITY.md). Only test systems you own or are authorised to test.

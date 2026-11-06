@@ -1,5 +1,6 @@
 """End-to-end motion engine checks through the REAL Remotion adapter and the ffmpeg renderer.
 Slow (one ~1-2 min Remotion render shared by all assertions); skipped when node/Remotion is not installed."""
+import os
 import subprocess
 import wave
 from pathlib import Path
@@ -7,6 +8,7 @@ from pathlib import Path
 import pytest
 from PIL import Image, ImageChops, ImageStat
 
+from app.core.config import get_settings
 from app.schemas.content import StoryboardData
 from app.services import renderer, visuals
 from app.workers import remotion_adapter
@@ -42,6 +44,19 @@ SCENES = [
 ]
 
 
+def remotion_ready() -> tuple[bool, str]:
+    """Remotion installed AND its Chrome Headless Shell present. Rendering needs that browser, which Remotion downloads on first
+    use (network, slow, can hang offline), so a fresh checkout skips these tests. Opt in: REMOTION_RENDER_TESTS=1 pytest tests/test_motion_render.py"""
+    ok, why = remotion_adapter.available()
+    if not ok:
+        return False, f"Remotion unavailable: {why}"
+    chrome = get_settings().video_engine_dir / "node_modules" / ".remotion" / "chrome-headless-shell"
+    have = chrome.is_dir() and any(p.is_file() and p.name.startswith("chrome-headless-shell") and not p.suffix and os.access(p, os.X_OK) for p in chrome.rglob("*"))
+    if not (have or os.environ.get("REMOTION_RENDER_TESTS") == "1"):
+        return False, "Chrome Headless Shell not downloaded yet; set REMOTION_RENDER_TESTS=1 to download it and run this slow test"
+    return True, "ok"
+
+
 def silent_wav(path: Path, secs: float):
     with wave.open(str(path), "wb") as w:
         w.setnchannels(1), w.setsampwidth(2), w.setframerate(48000)
@@ -55,9 +70,9 @@ def frame(video: Path, t: float, out: Path) -> Image.Image:
 
 @pytest.fixture(scope="module")
 def rendered(tmp_path_factory):
-    ok, why = remotion_adapter.available()
+    ok, why = remotion_ready()
     if not ok:
-        pytest.skip(f"Remotion unavailable: {why}")
+        pytest.skip(why)
     d = tmp_path_factory.mktemp("motion")
     sb = StoryboardData.model_validate({"lesson_title": "Motion test", "scenes": SCENES})
     audio = {}
@@ -119,7 +134,7 @@ def test_ffmpeg_renderer_still_handles_animated_and_visualization_scenes(tmp_pat
 
 
 def test_old_storyboard_without_animation_fields_renders_in_remotion(tmp_path):
-    ok, why = remotion_adapter.available()
+    ok, why = remotion_ready()
     if not ok:
         pytest.skip(why)
     raw = [{k: v for k, v in s.items() if k not in ("animation", "visualization", "quiz_answer")} for s in SCENES[:2]]  # exactly the pre-upgrade shape
@@ -135,7 +150,7 @@ def test_old_storyboard_without_animation_fields_renders_in_remotion(tmp_path):
 def test_gallery_components_not_driven_by_scenes_render(tmp_path):
     """StaggeredText, HighlightedKeywords, KineticTypography, LowerThird, AnimatedArchitecture/Network/ProcessFlow/Timeline and
     SyntaxHighlightedCode have no storyboard data source yet; the QA `Gallery` composition renders each so they are still exercised."""
-    ok, why = remotion_adapter.available()
+    ok, why = remotion_ready()
     if not ok:
         pytest.skip(why)
     eng = remotion_adapter.get_settings().video_engine_dir

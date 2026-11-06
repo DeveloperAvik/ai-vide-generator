@@ -21,6 +21,7 @@ Full instructions: [docs/installation.md](docs/installation.md), [docs/configura
 - Match the surrounding style. Don't claim support (platforms, providers) you haven't tested; say what you tested in the PR.
 
 ## What can't run in CI
+The real Remotion render tests (`backend/tests/test_motion_render.py`) skip until Remotion's Chrome Headless Shell has been downloaded; opt in with `REMOTION_RENDER_TESTS=1 python -m pytest tests/test_motion_render.py` (network, several minutes).
 Live LLM (Anthropic/Ollama), ElevenLabs, HeyGen, YouTube, n8n, Docker end-to-end and model-based TTS need credentials, models or services. Tests for those use mocks; manual verification is described in the PR template.
 
 ## Reporting bugs / proposing features

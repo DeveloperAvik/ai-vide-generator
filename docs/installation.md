@@ -1,6 +1,6 @@
 # Installation
 
-Requirements: Python 3.12+ (3.13 used by the maintainer), Node.js 18.18+ (the Next.js 15 requirement; Node 26 used by the maintainer), PostgreSQL 16, FFmpeg, and `openssl`. macOS is the tested platform; Linux should work with `apt install ffmpeg postgresql nodejs python3-venv` but is untested. Windows is not supported.
+Requirements: Python 3.12+ (3.13 used by the maintainer), Node.js 18.18+ (the Next.js 15 requirement); **Node 22 LTS recommended** — see the Remotion note below, PostgreSQL 16, FFmpeg, and `openssl`. macOS is the tested platform; Linux should work with `apt install ffmpeg postgresql nodejs python3-venv` but is untested. Windows is not supported.
 
 ## A. macOS local (no Docker, no paid services)
 ```bash
@@ -13,7 +13,7 @@ echo 'FIRST_ADMIN_PASSWORD=choose-a-strong-one' >> .env
 make demo                          # renders the sample lesson → storage/demo/
 make test
 ```
-The default voice provider is Kokoro: download its two model files first (see `voice/README.md`), otherwise `make demo` stops with a "no local voice provider" message. Piper is optional and **research-licensed / GPL** (see `MODEL_AND_ASSET_LICENSES.md`). Optional Remotion engine: `RENDER_ENGINE=remotion` (first render downloads a headless Chrome). **Remotion has its own licence; companies with more than 3 employees need a paid licence** (see `THIRD_PARTY_NOTICES.md`).
+The default voice provider is Kokoro: download its two model files first (see `voice/README.md`), otherwise `make demo` stops with a "no local voice provider" message. Piper is optional and **research-licensed / GPL** (see `MODEL_AND_ASSET_LICENSES.md`). Optional Remotion engine: `RENDER_ENGINE=remotion` (downloads a headless Chrome on first use; run `cd video-engine && npx remotion browser ensure` once, under **Node 22 LTS** — with Node 26 the Chrome archive extraction stalled in testing with Remotion 4.0.290). **Remotion has its own licence; companies with more than 3 employees need a paid licence** (see `THIRD_PARTY_NOTICES.md`).
 
 ## B. Docker (experimental, only partly verified — see architecture.md)
 ```bash

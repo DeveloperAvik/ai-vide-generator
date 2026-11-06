@@ -3,7 +3,7 @@
 - **Lesson FAILED** – read `last_error` and the *System Health* log; press Retry (resumes at last good stage, max 3; admin `POST /api/lessons/{id}/reset` clears the counter).
 - **`sensitive data detected in storyboard`** – remove the flagged key/email/IP from scene text.
 - **`could not be verified in NVD`** – delete or manually verify the CVE reference; the pipeline never accepts unverified CVE claims.
-- **Remotion first render slow/fails** – it downloads Chrome Headless Shell; needs network. Use `RENDER_ENGINE=ffmpeg` meanwhile.
+- **Remotion first render slow/fails/hangs** – it downloads and unpacks Chrome Headless Shell (network). Run `cd video-engine && npx remotion browser ensure` under **Node 22 LTS**; on Node 26 the extraction stalled in our testing (Remotion 4.0.290), leaving a half-unpacked `video-engine/node_modules/.remotion` (delete it and retry). Use `RENDER_ENGINE=ffmpeg` meanwhile.
 - **FFmpeg lacks libass/drawtext** – not needed; captions are drawn with Pillow.
 - **429** – rate limiter (login: 10/min).
 - **`DEMO CANNOT RUN: no local voice provider`** (Kokoro default) – download `kokoro-v1.0.onnx` and `voices-v1.0.bin` into `voice/models/kokoro/` (see `voice/README.md`), or set `VOICE_PROVIDER=macos_say` on macOS for development.

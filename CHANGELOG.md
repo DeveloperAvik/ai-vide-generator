@@ -7,6 +7,10 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 ### Added
 - First public open-source release preparation: Apache-2.0 `LICENSE` and `NOTICE`, `THIRD_PARTY_NOTICES.md`, `MODEL_AND_ASSET_LICENSES.md`, `OPEN_SOURCE_AUDIT.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, GitHub issue/PR templates and CI, new docs (`configuration`, `video-generation`, `security-model`), `lab/README.md`.
 
+### Fixed
+- `test_kokoro_reports_missing_files_instead_of_faking` no longer depends on `kokoro-onnx` being installed.
+- Real-Remotion render tests skip on a fresh checkout until Chrome Headless Shell exists (they previously hung or failed offline); opt in with `REMOTION_RENDER_TESTS=1`.
+
 ### Changed
 - `docs/` files renamed to lowercase (`architecture.md`, `installation.md`, `animation-engine.md`, `troubleshooting.md`).
 - `scripts/start.sh` now binds the dashboard to `127.0.0.1` (previously all interfaces).

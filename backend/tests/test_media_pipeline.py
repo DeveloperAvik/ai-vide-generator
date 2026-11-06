@@ -172,7 +172,12 @@ def test_pronunciation_only_changes_speech_text():
 
 
 def test_kokoro_reports_missing_files_instead_of_faking(monkeypatch, tmp_path):
+    import sys
+    import types
     from app.providers.voice import KokoroVoice
+    # Stub the optional packages so the "model files missing" branch is exercised even where kokoro-onnx isn't installed.
+    monkeypatch.setitem(sys.modules, "kokoro_onnx", types.ModuleType("kokoro_onnx"))
+    monkeypatch.setitem(sys.modules, "soundfile", types.ModuleType("soundfile"))
     v = KokoroVoice()
     v.model, v.voices = str(tmp_path / "no.onnx"), str(tmp_path / "no.bin")
     ok, why = v.available()

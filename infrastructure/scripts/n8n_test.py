@@ -14,7 +14,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "backend"))
-ENV = dict(l.split("=", 1) for l in (ROOT / ".env").read_text().splitlines() if "=" in l and not l.startswith("#"))
+_ENV_FILE = ROOT / ".env"  # created by scripts/setup.sh; absent on a fresh checkout/CI (the live n8n run then cannot authenticate)
+ENV = dict(l.split("=", 1) for l in _ENV_FILE.read_text().splitlines() if "=" in l and not l.startswith("#")) if _ENV_FILE.exists() else {}
 N8N, API = "http://localhost:5678", "http://localhost:8000/api"
 COMPOSE = ["docker", "compose", "-f", str(ROOT / "infrastructure/docker-compose.yml"), "--env-file", str(ROOT / ".env")]
 PY = str(ROOT / "backend/.venv/bin/python")
