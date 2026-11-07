@@ -8,6 +8,10 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 - Project renamed to **CipherCast** (previously "Cyber AI Studio"). The internal Postgres database/role name `cyber_studio` is unchanged so existing installs keep working.
 - First public open-source release preparation: Apache-2.0 `LICENSE` and `NOTICE`, `THIRD_PARTY_NOTICES.md`, `MODEL_AND_ASSET_LICENSES.md`, `OPEN_SOURCE_AUDIT.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, GitHub issue/PR templates and CI, new docs (`configuration`, `video-generation`, `security-model`), `lab/README.md`.
 
+### Changed (visuals)
+- FFmpeg slides redesigned: shared gradient/grid background, numbered/lettered/tick "card" rows for bullets, quiz lettering, window chrome on code blocks, enlarged auto-cropped diagrams, footer progress bar, content kept clear of the caption zone.
+- Thumbnail and instructor slide draw a branded shield graphic instead of the grey placeholder silhouette when no real portrait is configured (a real portrait still gets the circular ring treatment). The Remotion renderer is unchanged.
+
 ### Fixed
 - `test_kokoro_reports_missing_files_instead_of_faking` no longer depends on `kokoro-onnx` being installed.
 - Real-Remotion render tests skip on a fresh checkout until Chrome Headless Shell exists (they previously hung or failed offline); opt in with `REMOTION_RENDER_TESTS=1`.
