@@ -42,4 +42,4 @@ See `instructor/RECORDING_GUIDE.md` for on-camera conventions (including the saf
 
 ## Relationship to the rest of this repository
 
-This `course/` tree is a standalone, hand-authored curriculum, independent of the `cyber-ai-studio` automated lesson-production pipeline described in the top-level `README.md`. If a lesson here is later adapted into that pipeline's video format, convert it into a `lessons/<slug>/bundle.json` following `ai/schemas/lesson.schema.json` / `ai/schemas/storyboard.schema.json`, per `lessons/sqli_fundamentals/` as the worked example.
+This `course/` tree is a standalone, hand-authored curriculum, independent of the `ciphercast` automated lesson-production pipeline described in the top-level `README.md`. If a lesson here is later adapted into that pipeline's video format, convert it into a `lessons/<slug>/bundle.json` following `ai/schemas/lesson.schema.json` / `ai/schemas/storyboard.schema.json`, per `lessons/sqli_fundamentals/` as the worked example.

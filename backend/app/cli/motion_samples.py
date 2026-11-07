@@ -107,7 +107,7 @@ def build(name: str, stills: list[float]):
         wav = out / f"{scn.scene_id}.wav"
         narration.synth_with_timing(voice, scn.narration, wav)
         audio[scn.scene_id] = wav
-    res = remotion_adapter.render_long(storyboard=sb, assets_dir=out, scene_audio=audio, scene_video={}, out_dir=out / "render", portrait=ROOT / "avatar" / "assets" / "instructor.png", music=None, brand="Cyber Studio")
+    res = remotion_adapter.render_long(storyboard=sb, assets_dir=out, scene_audio=audio, scene_video={}, out_dir=out / "render", portrait=ROOT / "avatar" / "assets" / "instructor.png", music=None, brand="CipherCast")
     print(name, "->", res["video"], f"{res['duration']:.1f}s", "voice:", voice.name)
     for t in stills:  # frames of the FINISHED mp4 (what a viewer sees), for visual inspection
         subprocess.run(["ffmpeg", "-y", "-v", "error", "-ss", str(t), "-i", str(res["video"]), "-frames:v", "1", str(out / f"frame_{t:05.1f}.png")], check=True)

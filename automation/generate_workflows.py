@@ -79,7 +79,7 @@ def webhook_flow(filename, title, path, method, url, body, stage_name):
     """webhook -> HTTP (retry x3) -> respond | error branch -> log -> (notify) -> respond 500."""
     nodes = [webhook(path), http("Call Studio API", method, url, [260, 0], body), respond("Respond OK", "={{ JSON.stringify($json) }}", [520, -80]),
              log_failure(stage_name, [520, 120]), has_notify([760, 120]),
-             notify("Notify failure", f'"[Cyber Studio] {stage_name} failed for lesson " + ($("Webhook").item.json.body.lesson_id ?? "?")', [1000, 40]),
+             notify("Notify failure", f'"[CipherCast] {stage_name} failed for lesson " + ($("Webhook").item.json.body.lesson_id ?? "?")', [1000, 40]),
              respond("Respond Error", '={{ JSON.stringify({ error: "stage failed", stage: "' + stage_name + '" }) }}', [1240, 120], 502)]
     c = conn([("Webhook", 0), ("Call Studio API", 0)], [("Call Studio API", 0), ("Respond OK", 0)], [("Call Studio API", 1), ("Log failure", 0), ("Notify configured?", 0)],
              [("Notify configured?", 0), ("Notify failure", 0), ("Respond Error", 0)], [("Notify configured?", 1), ("Respond Error", 0)])
@@ -116,7 +116,7 @@ nodes = [node("Every 30 min", "n8n-nodes-base.scheduleTrigger", {"rule": {"inter
          node("Anything pending?", "n8n-nodes-base.if", {"conditions": {"options": {"caseSensitive": True, "typeValidation": "loose"}, "combinator": "and", "conditions": [
              {"id": nid("pend"), "leftValue": "={{ $input.all().length }}", "rightValue": 0, "operator": {"type": "number", "operation": "gt"}}]}}, [520, 100], 2),
          has_notify([760, 20]),
-         notify("Notify reviewers", '"[Cyber Studio] " + $("Get approval queue").all().length + " item(s) awaiting human approval: " + ($env.STUDIO_DASHBOARD_URL ?? "") + "/approvals"', [1000, 20])]
+         notify("Notify reviewers", '"[CipherCast] " + $("Get approval queue").all().length + " item(s) awaiting human approval: " + ($env.STUDIO_DASHBOARD_URL ?? "") + "/approvals"', [1000, 20])]
 save("09_human_approval.json", "09 Human Approval", nodes, conn([("Every 30 min", 0), ("Get approval queue", 0)], [("Webhook", 0), ("Get approval queue", 0)],
      [("Get approval queue", 0), ("Anything pending?", 0)], [("Anything pending?", 0), ("Notify configured?", 0), ("Notify reviewers", 0)]))
 nodes[4]["name"] = "Notify configured?"

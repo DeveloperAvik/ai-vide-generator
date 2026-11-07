@@ -151,7 +151,7 @@
         "url": "={{ $env.NOTIFY_WEBHOOK_URL }}",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ text: \"[Cyber Studio] avatar failed for lesson \" + ($(\"Webhook\").item.json.body.lesson_id ?? \"?\"), content: \"[Cyber Studio] avatar failed for lesson \" + ($(\"Webhook\").item.json.body.lesson_id ?? \"?\") }) }}"
+        "jsonBody": "={{ JSON.stringify({ text: \"[CipherCast] avatar failed for lesson \" + ($(\"Webhook\").item.json.body.lesson_id ?? \"?\"), content: \"[CipherCast] avatar failed for lesson \" + ($(\"Webhook\").item.json.body.lesson_id ?? \"?\") }) }}"
       },
       "onError": "continueRegularOutput"
     },

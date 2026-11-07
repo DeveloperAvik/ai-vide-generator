@@ -36,7 +36,7 @@ async def lifespan(app: FastAPI):
 
 
 _prod = get_settings().app_env == "production"
-app = FastAPI(title="Cyber AI Studio", version="1.0.0", lifespan=lifespan,
+app = FastAPI(title="CipherCast", version="1.0.0", lifespan=lifespan,
               docs_url=None if _prod else "/docs", redoc_url=None, openapi_url=None if _prod else "/openapi.json")
 
 

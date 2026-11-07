@@ -148,7 +148,7 @@
         "url": "={{ $env.NOTIFY_WEBHOOK_URL }}",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ JSON.stringify({ text: \"[Cyber Studio] \" + $(\"Get approval queue\").all().length + \" item(s) awaiting human approval: \" + ($env.STUDIO_DASHBOARD_URL ?? \"\") + \"/approvals\", content: \"[Cyber Studio] \" + $(\"Get approval queue\").all().length + \" item(s) awaiting human approval: \" + ($env.STUDIO_DASHBOARD_URL ?? \"\") + \"/approvals\" }) }}"
+        "jsonBody": "={{ JSON.stringify({ text: \"[CipherCast] \" + $(\"Get approval queue\").all().length + \" item(s) awaiting human approval: \" + ($env.STUDIO_DASHBOARD_URL ?? \"\") + \"/approvals\", content: \"[CipherCast] \" + $(\"Get approval queue\").all().length + \" item(s) awaiting human approval: \" + ($env.STUDIO_DASHBOARD_URL ?? \"\") + \"/approvals\" }) }}"
       },
       "onError": "continueRegularOutput"
     }

@@ -6,7 +6,7 @@ Requirements: Python 3.12+ (3.13 used by the maintainer), Node.js 18.18+ (the Ne
 ```bash
 brew install ffmpeg postgresql@16 node python@3.13
 brew services start postgresql@16
-cd cyber-ai-studio
+cd ciphercast
 ./scripts/setup.sh                 # venv, .env with random secrets, DB role+db, migrations, npm installs, workflow generation
 echo 'FIRST_ADMIN_PASSWORD=choose-a-strong-one' >> .env
 ./scripts/start.sh                 # API :8000, dashboard :3000

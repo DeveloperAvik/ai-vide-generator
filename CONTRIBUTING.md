@@ -1,10 +1,10 @@
-# Contributing to Cyber AI Studio
+# Contributing to CipherCast
 
 Thanks for helping! By contributing you agree that your contributions are licensed under the [Apache License 2.0](LICENSE) and that you follow the [Code of Conduct](CODE_OF_CONDUCT.md). Security issues: see [SECURITY.md](SECURITY.md), not public issues.
 
 ## Getting set up (macOS; Linux untested)
 ```bash
-git clone <your fork> && cd cyber-ai-studio
+git clone <your fork> && cd ciphercast
 brew install ffmpeg postgresql@16 node python@3.13 && brew services start postgresql@16
 ./scripts/setup.sh          # venv, .env with random secrets, DB, migrations, npm installs
 make test                   # backend tests (use a temporary SQLite DB, mock LLM, no network)

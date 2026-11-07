@@ -1,12 +1,12 @@
 # Third-Party Notices
 
-Cyber AI Studio's original source code is licensed under the Apache License 2.0 (see [LICENSE](LICENSE)). **Third-party software keeps its own licence; Apache-2.0 does not apply to it.** This repository does not vendor third-party code: dependencies are installed from their package registries. Licences below were read from package metadata installed on the maintainer's machine (2026-11-07) and are a best-effort inventory, not legal advice. Re-check before relying on it, especially after dependency updates.
+CipherCast's original source code is licensed under the Apache License 2.0 (see [LICENSE](LICENSE)). **Third-party software keeps its own licence; Apache-2.0 does not apply to it.** This repository does not vendor third-party code: dependencies are installed from their package registries. Licences below were read from package metadata installed on the maintainer's machine (2026-11-07) and are a best-effort inventory, not legal advice. Re-check before relying on it, especially after dependency updates.
 
 ## ⚠️ Read first: components with non-permissive terms
 
 | Component | Where used | Terms | What it means for you |
 |---|---|---|---|
-| **Remotion** (`remotion`, `@remotion/*` 4.0.290) | `video-engine/`, optional `RENDER_ENGINE=remotion` | [Remotion License](https://remotion.dev/license): free for individuals, for-profit organisations with up to 3 employees, and non-profits; **larger companies must buy a Remotion company licence**. Source-available, not OSI open source. | Cyber AI Studio's own code stays Apache-2.0, but **if you use the Remotion renderer you must comply with Remotion's licence.** The default FFmpeg renderer does not use Remotion. |
+| **Remotion** (`remotion`, `@remotion/*` 4.0.290) | `video-engine/`, optional `RENDER_ENGINE=remotion` | [Remotion License](https://remotion.dev/license): free for individuals, for-profit organisations with up to 3 employees, and non-profits; **larger companies must buy a Remotion company licence**. Source-available, not OSI open source. | CipherCast's own code stays Apache-2.0, but **if you use the Remotion renderer you must comply with Remotion's licence.** The default FFmpeg renderer does not use Remotion. |
 | **piper-tts** (optional, `scripts/install_voice.sh`) | `VOICE_PROVIDER=piper` | GPL-3.0-or-later | Not a dependency of this project and not distributed here. If you install it, its GPL terms apply to that installation. |
 | **n8n** (Docker image) | `infrastructure/`, `automation/` | [Sustainable Use License](https://docs.n8n.io/sustainable-use-license/) (fair-code) | Run as a separate service; not distributed here. Check n8n's terms for your use case (e.g. offering it as a hosted service). Our workflow JSON files are original to this project. |
 | **espeak-ng** (used by Kokoro for phonemisation, via `espeakng-loader`) | `VOICE_PROVIDER=kokoro` | GPL-3.0 | Runs locally as a library installed by pip; not bundled in this repository. |

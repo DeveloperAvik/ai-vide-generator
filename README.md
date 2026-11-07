@@ -1,6 +1,6 @@
-# Cyber AI Studio
+# CipherCast
 
-[![CI](https://github.com/OWNER/cyber-ai-studio/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/cyber-ai-studio/actions/workflows/ci.yml)
+[![CI](https://github.com/OWNER/ciphercast/actions/workflows/ci.yml/badge.svg)](https://github.com/OWNER/ciphercast/actions/workflows/ci.yml)
 [![License: Apache 2.0](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
 An automated production studio for **cybersecurity teaching videos**: curriculum → researched script → storyboard → narration → slides/diagrams/animations → rendered MP4 + SRT + thumbnail → **human approval** → private YouTube upload. It works fully offline with no paid services (mock LLM + local TTS); online providers are opt-in.

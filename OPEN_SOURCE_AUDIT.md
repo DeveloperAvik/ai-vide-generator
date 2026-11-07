@@ -1,6 +1,6 @@
-# Open-Source Release Audit — Cyber AI Studio
+# Open-Source Release Audit — CipherCast
 
-Audit date: 2026-11-07. Scope: the whole working directory (`ai-video-creation/cyber-ai-studio`). Method: file-content inspection, Gitleaks 8.30.1 (`--no-git`, redacted), installed-package metadata, and running the existing tests/typechecks. **No files were modified, deleted, or committed during this audit.** No secret values appear in this report.
+Audit date: 2026-11-07. Scope: the whole working directory (`ai-video-creation/ciphercast`). Method: file-content inspection, Gitleaks 8.30.1 (`--no-git`, redacted), installed-package metadata, and running the existing tests/typechecks. **No files were modified, deleted, or committed during this audit.** No secret values appear in this report.
 
 Status legend: ✅ verified by a command in this audit · ⚠️ needs a decision or follow-up · ❌ release blocker.
 
@@ -180,7 +180,7 @@ Validation (fresh `git clone` of the commit into a scratch directory, new venv, 
 Known environment issue: with **Node 26**, Remotion 4.0.290's Chrome archive extraction stalled (reproduced twice); Node 22 LTS works. Documented in `docs/installation.md` and `docs/troubleshooting.md`.
 
 ## 11. Remaining items for the maintainer
-1. Replace `OWNER` in the README badge URLs; the copyright line in `NOTICE` says "Cyber AI Studio contributors" — change it if you want your name.
+1. Replace `OWNER` in the README badge URLs; the copyright line in `NOTICE` says "CipherCast contributors" — change it if you want your name.
 2. The git commit author is your local git identity (name/email from `git config`). Check it before pushing; GitHub's `users.noreply.github.com` address avoids publishing a personal email.
 3. Add a dedicated conduct/security contact if desired (currently GitHub private vulnerability reporting). Enable *Private vulnerability reporting* in the repo settings.
 4. Push, confirm CI is green, then tag `v1.0.0`.

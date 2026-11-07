@@ -23,7 +23,7 @@ class Settings(BaseSettings):
     reviewer_timeout_s: int = 900
     research_max_bytes: int = 2_000_000
     research_timeout_s: float = 15
-    research_user_agent: str = "cyber-ai-studio-research/1.0 (+local educational tool)"
+    research_user_agent: str = "ciphercast-research/1.0 (+local educational tool)"
     llm_fallback_provider: str = ""  # e.g. "ollama": used when the primary raises LLMError
     voice_name: str = "default"  # label stored with generations for consistency tracking
     render_engine: str = "ffmpeg"  # ffmpeg | remotion
