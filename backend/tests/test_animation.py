@@ -153,3 +153,30 @@ def test_quiz_answer_validation_and_feedback_event():
     with pytest.raises(ValidationError):
         scene(type="slide", quiz_answer=0)
     assert not any(e.target == "answer" for e in sync.resolve_events(scene(type="quiz", bullets=["a", "b"]), TIMING, 5.2, 30, 400)[0])  # no answer data -> no feedback invented
+
+
+def test_llm_section_scene_with_empty_terminal_or_code_payload_becomes_a_slide():
+    """A small model sometimes emits type=terminal/code with no payload; that must not fail the whole section."""
+    from app.services.generation import SectionScene
+    base = {"narration": "word " * 30, "duration_seconds": 10, "visual_description": "v", "on_screen_text": "t"}
+    assert SectionScene.model_validate({**base, "type": "terminal", "terminal_lines": []}).type == "slide"
+    assert SectionScene.model_validate({**base, "type": "code", "code": "  "}).type == "slide"
+    assert SectionScene.model_validate({**base, "type": "terminal", "terminal_lines": ["$ id"]}).type == "terminal"
+
+
+def test_semantic_repetition_flags_reworded_steps_but_not_quiz_or_summary():
+    from types import SimpleNamespace as N
+    from app.services import lengthplan
+    a = "First contact the management or legal department and request formal authorization, then submit a detailed scope document covering systems, networks, methods and timeline."
+    b = "Reach out to legal or management to obtain formal authorization, and prepare a detailed scope document describing the systems, networks, testing methods and the timeline."
+    c = "Encryption keys should be rotated regularly and stored inside hardware security modules with strict audit logging enabled for every access request."
+    sc = [N(type="instructor", narration=a), N(type="slide", narration=b), N(type="slide", narration=c), N(type="summary", narration="To recap: legal sign-off plus a written scope of systems, networks, methods and timeline protects everyone involved.")]
+    assert lengthplan.repetition_pairs(sc) == []                      # the hard (stitch) check is unchanged
+    assert [(x, y) for x, y, _ in lengthplan.repetition_pairs(sc, semantic=True)] == [(0, 1)]
+
+
+def test_covered_note_carries_narration_not_just_the_scene_type():
+    from types import SimpleNamespace as N
+    from app.services.generation import _covered_note
+    assert _covered_note(N(on_screen_text="", narration="Contact legal first. Then scope.")) == "Contact legal first."
+    assert _covered_note(N(on_screen_text="Scope", narration="Define the scope. More.")) == "Scope: Define the scope."

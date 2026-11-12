@@ -42,7 +42,7 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
         {data && <div className="mt-4 rounded-xl border border-line bg-surface p-3"><PipelineStepper status={data.lesson.status} lastGood={data.lesson.last_good_status} /></div>}
         {data && (() => {
           const st: string = data.lesson.status;
-          const action = st === "FAILED" ? <Btn kind="danger" icon="refresh" loading={busy} onClick={() => run(async () => { await api(`/lessons/${id}/retry`, { method: "POST" }); reload(); }, "Retry started")}>Retry</Btn>
+          const action = st === "FAILED" ? <Btn kind="danger" icon="refresh" loading={busy} onClick={() => run(async () => { if (data.lesson.retry_count >= 3) await api(`/lessons/${id}/reset`, { method: "POST" }); await api(`/lessons/${id}/retry`, { method: "POST" }); reload(); }, "Retry started")}>{data.lesson.retry_count >= 3 ? "Reset retries & retry" : "Retry"}</Btn>
             : st === "APPROVAL_PENDING" || st === "TECHNICAL_REVIEW" ? <Link href="/approvals" className="inline-flex items-center gap-1.5 rounded-lg bg-brand-500 px-3.5 py-2 text-sm font-medium text-on-brand hover:bg-brand-400">Open approval queue</Link>
             : !GATED.includes(st) && !WAITING.includes(st) ? <Btn icon="play" loading={busy} onClick={() => run(async () => { await api(`/lessons/${id}/run`, { method: "POST" }); reload(); }, "Pipeline started")}>Run next step</Btn> : null;
           return (<div className="mt-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-brand-500/20 bg-brand-500/5 px-4 py-3">
@@ -77,6 +77,7 @@ export default function LessonPage({ params }: { params: Promise<{ id: string }>
               <ul className="space-y-1 text-sm">{tech.report.issues.map((i: any, k: number) => <li key={k} className={i.severity === "error" ? "text-rose-300" : "text-amber-300"}>{i.severity}: {i.msg}</li>)}</ul>
               {data.lesson.status === "TECHNICAL_REVIEW" && (<div className="mt-3 flex gap-2">
                 <Btn disabled={!tech.passed || (data.review && data.review.state !== "passed")} onClick={() => run(async () => { await api(`/lessons/${id}/script/decision`, { method: "POST", json: { decision: "APPROVED", stage: "script" } }); reload(); })}>Approve script</Btn>
+                {data.review && data.review.state !== "passed" && <span className="self-center text-xs text-slate-400">Approval unlocks once every item in &ldquo;Technical review &amp; fact-checking&rdquo; below is resolved (fix the script, or accept/dismiss findings and claims there).</span>}
                 <Btn kind="danger" onClick={() => run(async () => { await api(`/lessons/${id}/script/decision`, { method: "POST", json: { decision: "REJECTED", stage: "script" } }); reload(); })}>Reject</Btn></div>)}
             </>)}
           </Card>

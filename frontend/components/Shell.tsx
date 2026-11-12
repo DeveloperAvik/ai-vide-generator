@@ -8,7 +8,7 @@ import { ThemeToggle } from "./ThemeToggle";
 
 const NAV: { group: string; items: [string, string, IconName][] }[] = [
   { group: "Production", items: [["/", "Overview", "home"], ["/courses", "Courses", "book"], ["/modules", "Modules", "layers"], ["/lessons", "Lessons", "list"], ["/assets", "Asset Manager", "image"]] },
-  { group: "Studio", items: [["/avatar", "Avatar", "user"], ["/voice", "Voice", "mic"], ["/renders", "Video Rendering", "film"]] },
+  { group: "Studio", items: [["/avatar", "Avatar", "user"], ["/voice", "Voice", "mic"], ["/renders", "Video Rendering", "film"], ["/reels", "Instagram Reels", "film"]] },
   { group: "Publishing", items: [["/approvals", "Approval Queue", "check"], ["/youtube", "YouTube", "send"], ["/analytics", "Analytics", "chart"]] },
   { group: "System", items: [["/settings", "Settings", "sliders"], ["/health", "System Health", "activity"]] },
 ];

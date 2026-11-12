@@ -3,10 +3,11 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.reels import router as reels_router
 from app.api.routes import router
 from app.core.config import get_settings
 from app.core.db import SessionLocal
-from app.models import User
+from app.models import Lesson, LessonStatus, User
 from app.security.auth import hash_password
 from app.security.ratelimit import rate_limit_middleware
 
@@ -14,6 +15,13 @@ from app.security.ratelimit import rate_limit_middleware
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     s = get_settings()
+    import logging
+    studio_log = logging.getLogger("studio")  # pipeline progress (e.g. per storyboard section) goes to the API log
+    studio_log.setLevel(logging.INFO)
+    if not studio_log.handlers:
+        h = logging.StreamHandler()
+        h.setFormatter(logging.Formatter("%(levelname)s:     %(name)s: %(message)s"))
+        studio_log.addHandler(h)
     if s.app_env == "production":
         if len(s.secret_key) < 32 or s.secret_key == "change-me-in-env":
             raise RuntimeError("APP_ENV=production requires SECRET_KEY of at least 32 chars")
@@ -32,6 +40,14 @@ async def lifespan(app: FastAPI):
                 db.commit()
         finally:
             db.close()
+    db = SessionLocal()  # background jobs die with the process: a lesson still in a working status has no job behind it, so make it retryable
+    try:
+        working = [LessonStatus.RESEARCHING, LessonStatus.ASSETS_GENERATING, LessonStatus.RENDERING, LessonStatus.QUALITY_CHECK]
+        for l in db.query(Lesson).filter(Lesson.status.in_(working)).all():
+            l.status, l.last_error = LessonStatus.FAILED, f"{l.status.value.lower()}: interrupted by an API restart; press Retry (no retry was used)"
+        db.commit()
+    finally:
+        db.close()
     yield
 
 
@@ -52,3 +68,4 @@ async def security_headers(request, call_next):
 app.add_middleware(CORSMiddleware, allow_origins=get_settings().cors_origins.split(","), allow_methods=["*"], allow_headers=["*"], allow_credentials=True)
 app.middleware("http")(rate_limit_middleware)
 app.include_router(router)
+app.include_router(reels_router)

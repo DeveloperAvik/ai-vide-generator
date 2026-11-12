@@ -204,8 +204,8 @@ def _script():
 def test_unusable_mode3d_is_dropped_but_missing_payload_is_not_invented():
     base = {**scenes_with_words(30, 1)[0], "mode3d": "flow", "mermaid": None}
     assert generation.SectionScene.model_validate(base).mode3d is None
-    with pytest.raises(Exception, match="payload"):
-        generation.SectionScene.model_validate({**base, "type": "code", "mode3d": None})  # a code scene without code is rejected, never invented
+    # a code scene without code is never invented: it is downgraded to a plain slide (bullets are derived from the narration later)
+    assert generation.SectionScene.model_validate({**base, "type": "code", "mode3d": None}).type == "slide"
 
 
 def test_every_scene_type_needs_its_payload():

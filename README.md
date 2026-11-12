@@ -18,6 +18,7 @@ Everything below exists in the code; "tested" means covered by the backend test 
 - Narration with measured sentence timing, and a deterministic animation engine synchronised to it ([docs/animation-engine.md](docs/animation-engine.md)).
 - Two renderers: FFmpeg (default) and Remotion (optional; see the licence note below).
 - Dashboard (Next.js) with approval gates, retry/resume, audit log; 13 n8n workflows for orchestration.
+- Instagram Reels maker: any topic (+ optional photos) → 9:16 MP4 with narration, captions and synthesised lofi/upbeat music ([docs/reels.md](docs/reels.md)).
 - Intentionally vulnerable, localhost-only lab app for recording demos ([lab/README.md](lab/README.md)).
 
 **Not verified / limited:** HeyGen talking avatars (written from public docs, never run against a live account); MuseTalk (needs a CUDA GPU, not integrated); the Docker/n8n path (images built, workflow import and end-to-end runs untested); Linux (untested); Windows (unsupported).

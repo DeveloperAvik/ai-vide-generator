@@ -58,8 +58,8 @@ SECTIONS: list[tuple[str, float, str]] = [
     ("objectives", 0.04, "One slide scene. The bullets list the learning objectives; the NARRATION must speak them in full sentences ('By the end you will be able to ...', one sentence per objective) and then state that all practice happens only in an authorized, isolated lab."),
     ("fundamentals", 0.12, "Background and fundamentals a beginner needs first: the technologies and terms involved. Slides, optionally a diagram."),
     ("technical", 0.20, "Technical explanation of the root cause and mechanism: slide and diagram scenes. Optionally use mode3d (flow from `mermaid`, or stack from `bullets`) for one key diagram."),
-    ("demo", 0.24, "Practical demonstration in an authorized lab: code scenes (vulnerable vs fixed) and terminal scenes with ILLUSTRATIVE output only; explain what each step shows and why."),
-    ("attack_scenarios", 0.10, "Real-world attack scenarios: how this appears in real incidents, pentests and bug bounty; impact; responsible reporting. Do not invent incidents, CVE ids or victims."),
+    ("demo", 0.24, "Practical demonstration that stays on the lesson's own topic. For a technical vulnerability: code scenes (vulnerable vs fixed) and terminal scenes with ILLUSTRATIVE output only, in an authorized lab. For a legal, ethics, policy, process or framework topic: walk through a realistic artifact (scope checklist, rules of engagement, authorization clauses, report layout, framework lookup) as a terminal scene (e.g. `$ cat scope_of_work.txt` then its lines) or code scene, with NO exploit strings or attack commands. Always include at least one terminal or code scene. Explain what each step shows and why."),
+    ("attack_scenarios", 0.10, "Real-world attack scenarios on the lesson's own topic: how this appears in real incidents, pentests and bug bounty, or for a legal/ethical/process topic, what goes wrong when it is ignored and how engagements handle it; impact; responsible reporting. Do not invent incidents, CVE ids or victims, and do not introduce exploit examples the lesson is not about."),
     ("defense", 0.12, "Detection and mitigation: secure coding, configuration, monitoring and logging. Slides, optionally a diagram."),
     ("mistakes", 0.05, "Common mistakes developers, defenders and learners make; one or two slide scenes. Narrate each mistake in a sentence or two: what people do wrong, why it fails, what to do instead."),
     ("quiz", 0.04, "Knowledge-check questions: one or more quiz scenes (question + 4 options in bullets) with time to pause, then the answers explained."),
@@ -100,8 +100,21 @@ def _trigrams(text: str) -> set:
     return {tuple(w[i:i + 3]) for i in range(len(w) - 2)}
 
 
-def repetition_pairs(scenes, threshold: float = 0.5) -> list[tuple[int, int, str]]:
-    """(earlier index, later index, reason) for near-duplicate narration (trigram Jaccard) or a shared 7-word phrase. 0-based."""
+_STOP = frozenset("a an the and or of to in on for with by as at is are be it its this that these those we you your our their they them can will should "
+                  "must may from into than then so such not no also more most other about each every any all both which who what when how why if there "
+                  "here have has had do does".split())
+SEMANTIC_OVERLAP = 0.5   # share of the shorter scene's content words that the other scene also uses
+SEMANTIC_SKIP = {"quiz", "summary"}  # these legitimately revisit earlier points
+
+
+def _content_words(text: str) -> set:
+    """Content-word stems: catches the same steps re-explained in different sentences, which trigram/7-word checks miss."""
+    return {w[:6] for w in re.findall(r"[a-z]+", text.lower()) if w not in _STOP and len(w) > 3}
+
+
+def repetition_pairs(scenes, threshold: float = 0.5, semantic: bool = False) -> list[tuple[int, int, str]]:
+    """(earlier index, later index, reason) for near-duplicate narration (trigram Jaccard) or a shared 7-word phrase. 0-based.
+    With `semantic`, scenes that re-explain the same points in new words are reported too (used to drive rewrites, never to fail a build)."""
     pairs: dict[tuple[int, int], str] = {}
     grams = [_trigrams(s.narration) for s in scenes]
     seq = []
@@ -115,6 +128,10 @@ def repetition_pairs(scenes, threshold: float = 0.5) -> list[tuple[int, int, str
                 pairs[(x, y)] = "nearly the same thing"
             elif seq[x] & seq[y]:
                 pairs[(x, y)] = f"both say \"{' '.join(sorted(seq[x] & seq[y])[0])}\""
+            elif semantic and getattr(scenes[x], "type", "") not in SEMANTIC_SKIP and getattr(scenes[y], "type", "") not in SEMANTIC_SKIP:
+                ca, cb = _content_words(scenes[x].narration), _content_words(scenes[y].narration)
+                if min(len(ca), len(cb)) >= 10 and len(ca & cb) / min(len(ca), len(cb)) >= SEMANTIC_OVERLAP:
+                    pairs[(x, y)] = "re-explains points an earlier scene already covered"
     return [(x, y, r) for (x, y), r in sorted(pairs.items())]
 
 

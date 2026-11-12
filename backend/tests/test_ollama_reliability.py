@@ -187,3 +187,47 @@ def test_a_crashing_background_job_is_logged_not_swallowed(db):
     db.expire_all()
     row = db.query(WorkflowLog).filter(WorkflowLog.lesson_id == l.id, WorkflowLog.stage == "job", WorkflowLog.level == "error").first()
     assert row and "exceeded retries" in row.message
+
+
+def test_repeat_limit_500_is_retried_with_a_repeat_penalty(monkeypatch):
+    class Loop:
+        status_code, text = 500, '{"error":"prediction aborted, token repeat limit reached"}'
+    seen = []
+
+    def post(url, **kw):
+        seen.append(kw["json"]["options"])
+        return Loop() if len(seen) < 3 else Resp()
+    monkeypatch.setattr(httpx, "post", post)
+    _ollama().complete("s", "p")
+    assert len(seen) == 3 and "repeat_penalty" not in seen[0] and seen[2]["repeat_penalty"] > seen[1]["repeat_penalty"] > 1
+
+
+def test_repeat_limit_gives_up_after_three_tries(monkeypatch):
+    class Loop:
+        status_code, text = 500, '{"error":"prediction aborted, token repeat limit reached"}'
+    n = []
+    monkeypatch.setattr(httpx, "post", lambda url, **kw: n.append(1) or Loop())
+    with pytest.raises(LLMError, match="repeat limit"):
+        _ollama().complete("s", "p")
+    assert len(n) == 3
+
+
+def test_restart_makes_orphaned_working_lessons_retryable(db):
+    from app.core.db import SessionLocal
+    from app.main import app, lifespan
+    from app.models import Lesson, LessonStatus as S
+    import asyncio
+    from tests.helpers import make_lesson
+    l, ok = make_lesson(db), make_lesson(db)
+    l.status, l.last_good_status = S.ASSETS_GENERATING, S.SCRIPT_APPROVED.value
+    ok.status, ok.last_good_status = S.APPROVAL_PENDING, S.APPROVAL_PENDING.value
+    db.commit()
+
+    async def boot():
+        async with lifespan(app):
+            pass
+    asyncio.run(boot())
+    db.expire_all()
+    assert db.get(Lesson, l.id).status == S.FAILED and db.get(Lesson, l.id).retry_count == 0
+    assert db.get(Lesson, l.id).last_good_status == S.SCRIPT_APPROVED.value
+    assert db.get(Lesson, ok.id).status == S.APPROVAL_PENDING

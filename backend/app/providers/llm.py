@@ -127,7 +127,7 @@ class OllamaProvider(LLMProvider):
         for attempt in range(s.ollama_connect_retries + 1):
             try:
                 return httpx.post(f"{self.url}/api/chat", timeout=timeout, json=payload)
-            except (httpx.ConnectError, httpx.ConnectTimeout) as e:  # nothing was sent: safe to retry, bounded
+            except (httpx.ConnectError, httpx.ConnectTimeout, httpx.RemoteProtocolError) as e:  # nothing was sent, or the server dropped us before any reply (Ollama restarting/unloading): safe to retry, bounded
                 if attempt < s.ollama_connect_retries:
                     time.sleep(2 ** (attempt + 1) + random.uniform(0, 1))
                     continue
@@ -144,10 +144,14 @@ class OllamaProvider(LLMProvider):
         if not _OLLAMA_LOCK.acquire(timeout=wait):
             raise LLMError(f"Ollama is busy: another generation in this process held the model for more than {wait} s; this request was not sent")
         try:
-            r = self._post({
-                "model": self.model, "stream": False, **({} if self.plain else {"format": self.schema or "json"}),
-                "options": {"num_predict": max_tokens, "num_ctx": 8192, "temperature": 0.4}, "keep_alive": "10m",
-                "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}]})
+            for attempt in range(3):  # "token repeat limit reached" = the model looped; resampling with a repeat penalty normally clears it
+                r = self._post({
+                    "model": self.model, "stream": False, **({} if self.plain else {"format": self.schema or "json"}),
+                    "options": {"num_predict": max_tokens, "num_ctx": 8192, "temperature": 0.4 + 0.2 * attempt,
+                                **({"repeat_penalty": 1.1 + 0.05 * attempt} if attempt else {})}, "keep_alive": "10m",
+                    "messages": [{"role": "system", "content": system}, {"role": "user", "content": prompt}]})
+                if not (r.status_code == 500 and "repeat limit" in r.text):
+                    break
         finally:
             _OLLAMA_LOCK.release()
         if r.status_code == 404:

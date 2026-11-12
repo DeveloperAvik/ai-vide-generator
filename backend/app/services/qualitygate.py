@@ -72,7 +72,7 @@ def script_checks(db: Session, lesson: Lesson, require_approval: bool) -> tuple[
             k = claims_mod._norm(s_)
             if len(k) >= 60:
                 if k in seen:
-                    dup.append(s_[:80])
+                    dup.append(_clip(s_, 80))
                 seen[k] = field
     c.append(_chk("no_repeated_paragraphs", not dup, f"repeated sentences: {dup[:3]}" if dup else ""))
     # --- references
@@ -99,16 +99,22 @@ def script_checks(db: Session, lesson: Lesson, require_approval: bool) -> tuple[
     openf = db.query(ReviewFinding).filter_by(lesson_id=lesson.id, script_version=v, status="open").all()
     blocking = [f for f in openf if f.blocks_approval]
     c.append(_chk("no_unresolved_blocking_findings", not blocking,
-                  "; ".join(f"#{f.id} {f.severity}: {f.problem_text[:60]}" for f in blocking) if blocking else f"{len(openf)} open non-blocking findings"))
+                  "; ".join(f"#{f.id} {f.severity}: {_clip(f.problem_text)}" for f in blocking) if blocking else f"{len(openf)} open non-blocking findings"))
     cl = db.query(TechnicalClaim).filter_by(lesson_id=lesson.id, script_version=v).all()
     blk = [x for x in cl if claims_mod.claim_blocks(x)]
-    c.append(_chk("no_unsupported_critical_claims", not blk, "; ".join(f"#{x.id} {x.status}: {x.text[:60]}" for x in blk) if blk else f"{len(cl)} claims checked, {sum(1 for x in cl if x.status == 'supported')} supported"))
+    c.append(_chk("no_unsupported_critical_claims", not blk, "; ".join(f"#{x.id} {x.status}: {_clip(x.text)}" for x in blk) if blk else f"{len(cl)} claims checked, {sum(1 for x in cl if x.status == 'supported')} supported"))
     # --- human approval (pre_tts only)
     if require_approval:
         last = db.query(Approval).filter_by(lesson_id=lesson.id, stage="script").order_by(Approval.id.desc()).first()
         ok = bool(last and last.decision == "APPROVED" and _after(last.created_at, cur.created_at))
         c.append(_chk("human_script_approval", ok, "script approved by a human reviewer" if ok else "no human approval of the latest script version"))
     return c, v
+
+
+def _clip(text: str, n: int = 60) -> str:
+    """Shorten for display at a word boundary, with an ellipsis, so details never end mid-word."""
+    text = " ".join((text or "").split())
+    return text if len(text) <= n else text[:n].rsplit(" ", 1)[0].rstrip(",;:") + "…"
 
 
 def _utc(t):

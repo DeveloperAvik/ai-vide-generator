@@ -5,6 +5,7 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 ## [Unreleased]
 
 ### Added
+- **Instagram Reels maker** (`app/services/reels.py`, `POST /api/reels`, `python -m app.cli.reel`): any topic and optional photos become a 1080x1920 MP4 with narration, captions, Ken Burns motion and locally synthesised music. Frame-by-frame motion renderer (animated backgrounds, word-highlight captions, transitions, beat pulse). See `docs/reels.md`.
 - Project renamed to **CipherCast** (previously "Cyber AI Studio"). The internal Postgres database/role name `cyber_studio` is unchanged so existing installs keep working.
 - First public open-source release preparation: Apache-2.0 `LICENSE` and `NOTICE`, `THIRD_PARTY_NOTICES.md`, `MODEL_AND_ASSET_LICENSES.md`, `OPEN_SOURCE_AUDIT.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`, GitHub issue/PR templates and CI, new docs (`configuration`, `video-generation`, `security-model`), `lab/README.md`.
 

@@ -44,7 +44,7 @@ OFFICIAL_HOSTS = {
     "proceedings.neurips.cc": ("NeurIPS", "academic"), "openreview.net": ("OpenReview", "academic"),
     # programming / platforms
     "doc.rust-lang.org": ("Rust project", "vendor_docs"), "go.dev": ("Go project", "vendor_docs"), "nodejs.org": ("Node.js", "vendor_docs"),
-    "docs.oracle.com": ("Oracle", "vendor_docs"), "kotlinlang.org": ("JetBrains", "vendor_docs"), "www.typescriptlang.org": ("Microsoft", "vendor_docs"),
+    "docs.oracle.com": ("Oracle", "vendor_docs"), "www.virtualbox.org": ("Oracle VirtualBox", "vendor_docs"), "kotlinlang.org": ("JetBrains", "vendor_docs"), "www.typescriptlang.org": ("Microsoft", "vendor_docs"),
     "docs.github.com": ("GitHub", "vendor_docs"), "git-scm.com": ("Git", "vendor_docs"), "www.postgresql.org": ("PostgreSQL", "vendor_docs"),
     "isocpp.org": ("ISO C++", "standards"), "en.cppreference.com": ("cppreference", "vendor_docs"), "www.w3.org": ("W3C", "standards"),
     # cloud / devops
@@ -406,7 +406,7 @@ def suggest_urls(llm, lesson: Lesson, domain: str) -> list[tuple[str, str, str]]
         res = generation._ask(llm, "research", f"TOPIC: {lesson.title}\nSUMMARY: {lesson.summary}", generation.SourceSuggestions, domain=domain)
     except Exception:  # noqa: BLE001 - research must still succeed with seeds/search alone
         return []
-    return [(x.kind[:32] or "model_suggested", x.title[:100], x.url) for x in res.sources if host_allowed(x.url)]
+    return [("model_suggested", x.title[:100], x.url) for x in res.sources if host_allowed(x.url)]  # always this kind, whatever the model called it: collect() drops it unless the page really loaded
 
 
 def _topic_text(lesson: Lesson) -> str:

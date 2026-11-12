@@ -1,6 +1,7 @@
 """LLM-backed generation: curriculum, lesson script, storyboard, YouTube metadata. All output is schema-validated;
 on validation failure we retry once feeding the error back, then raise - malformed data is never saved."""
 import json
+import logging
 import re
 from pathlib import Path
 from typing import TypeVar
@@ -155,6 +156,8 @@ class SectionScene(Scene):
             v = {**v, "visualization": clean_visualization(v["visualization"]) if v.get("type") == "diagram" else None}
         if isinstance(v, dict) and v.get("quiz_answer") is not None and not (v.get("type") == "quiz" and isinstance(v["quiz_answer"], int) and 0 <= v["quiz_answer"] < len(v.get("bullets") or [])):
             v = {**v, "quiz_answer": None}
+        if isinstance(v, dict) and v.get("type") in ("code", "terminal") and not (lambda x: x.strip() if isinstance(x, str) else x)(v.get("code" if v["type"] == "code" else "terminal_lines")):
+            v = {**v, "type": "slide", "code": None, "terminal_lines": None}  # a small model left the payload empty: keep the narration as a plain slide
         if isinstance(v, dict) and v.get("mode3d"):
             ok = bool(v.get("mermaid")) if v["mode3d"] == "flow" else len(v.get("bullets") or []) >= 2
             if not ok:
@@ -166,11 +169,19 @@ class SectionOut(Strict):
     scenes: list[SectionScene] = Field(min_length=1, max_length=12)
 
 
+log = logging.getLogger("studio.storyboard")
 MAX_CORRECTIONS = 2
 SCRIPT_MAX_CORRECTIONS = 4  # a local model usually undershoots by a little each pass; the longest draft is kept
 SECTION_MIN_SLACK_WORDS = 15  # tiny sections get an absolute allowance as well
 QUICK_SECTION_TOLERANCE = 0.25  # quick draft: a section this close to its budget is used as written, without expand/trim rewrites
 SECTION_HARD_TOLERANCE = 0.45  # after corrections, a section further than this from budget fails the whole generation
+
+
+def _covered_note(sc) -> str:
+    """What an earlier scene already said, for ALREADY_COVERED_SCENES: its title plus the first sentence of its narration
+    (titles are often empty, and a bare scene type tells the model nothing about what to avoid repeating)."""
+    first = re.split(r"(?<=[.!?])\s+", sc.narration.strip(), maxsplit=1)[0][:140]
+    return f"{sc.on_screen_text}: {first}" if sc.on_screen_text else first
 
 
 def _section_prompt(lesson: Lesson, script: dict, name: str, guide: str, budget: int, covered: list[str], feedback: str = "") -> str:
@@ -244,7 +255,7 @@ def _make_distinct(llm: LLMProvider, lesson: Lesson, name: str, prior: list, out
     for _ in range(rounds):
         allsc = list(prior) + scenes
         hits: dict[int, list[tuple[int, str]]] = {}
-        for x, y, r in lengthplan.repetition_pairs(allsc):
+        for x, y, r in lengthplan.repetition_pairs(allsc, semantic=True):
             if y >= len(prior):
                 hits.setdefault(y - len(prior), []).append((x, r))
         if not hits:
@@ -258,7 +269,8 @@ def _make_distinct(llm: LLMProvider, lesson: Lesson, name: str, prior: list, out
                       f"EARLIER SCENES THE VIEWER HAS ALREADY HEARD (do not repeat their wording, definitions or examples): {earlier}\n"
                       f"PHRASES YOU MUST NOT USE: {avoid or 'none'}\n\nCURRENT NARRATION ({n} words): {sc.narration}\n\n"
                       f"Rewrite the current narration to about {n} words. The viewer already knows what the topic is, so do NOT define it again. "
-                      f"Add NEW information about this scene's own point (a different mechanism step, example or defensive detail) in different words.")
+                      f"Add NEW information about this scene's own point (a different mechanism step, example or defensive detail) in different words. "
+                      f"If the earlier scenes already walked through the same steps, do not walk through them again: refer back in one short clause at most and spend the words on what is new.")
             new = _clean_prose(llm.complete_text(system, prompt))
             if new and not _MARKUP_RE.search(new):
                 scenes[i] = sc.model_copy(update={"narration": new})
@@ -314,6 +326,7 @@ def build_storyboard_by_sections(lesson: Lesson, script: dict, llm: LLMProvider,
         if saved and saved.exists():
             cached = json.loads(saved.read_text())
             if cached.get("key") == key:
+                log.info("lesson %s section %s: reused saved (%s/%s words)", lesson.id, name, cached.get("words"), bud[name])
                 try:
                     loaded = SectionOut(scenes=_ensure_bullets(llm, [SectionScene.model_validate(x) for x in cached["scenes"]]))
                     if lengthplan.claim_issues(loaded.scenes) or lengthplan.speakability_issues(loaded.scenes):
@@ -322,7 +335,7 @@ def build_storyboard_by_sections(lesson: Lesson, script: dict, llm: LLMProvider,
                 except ValidationError:  # saved under an older, looser schema: regenerate this section
                     parts.pop(name, None)
                 else:
-                    covered += [s.on_screen_text or s.type for s in parts[name]]
+                    covered += [_covered_note(s) for s in parts[name]]
                     continue
         feedback, best = "", None  # best = (relative error, scenes, words): the attempt closest to budget wins, not merely the last one
         for attempt in range(1 if quick else MAX_CORRECTIONS + 1):
@@ -330,6 +343,8 @@ def build_storyboard_by_sections(lesson: Lesson, script: dict, llm: LLMProvider,
             words = sum(len(s.narration.split()) for s in out.scenes)
             repeats = lengthplan.repetition_issues([n for p_ in parts.values() for n in p_] + out.scenes) + lengthplan.speakability_issues(out.scenes) + lengthplan.claim_issues(out.scenes)
             err = abs(words - bud[name]) / bud[name] + (1.0 if repeats else 0.0)
+            log.info("lesson %s section %s: attempt %d/%d %d words (budget %d)%s", lesson.id, name, attempt + 1, 1 if quick else MAX_CORRECTIONS + 1, words, bud[name],
+                     f", issues: {repeats[:2]}" if repeats else "")
             if best is None or err < best[0]:
                 best = (err, out, words)
             if lengthplan.within(words, bud[name]) and not repeats:
@@ -353,11 +368,21 @@ def build_storyboard_by_sections(lesson: Lesson, script: dict, llm: LLMProvider,
         out = _make_distinct(llm, lesson, name, prior, out)  # repair repetition now, not after 40 minutes of generation
         words = sum(len(x.narration.split()) for x in out.scenes)
         parts[name] = out.scenes
-        if saved and lengthplan.within(words, bud[name]) and not lengthplan.repetition_issues(prior + out.scenes):
+        log.info("lesson %s section %s: done, %d words (budget %d), %d of %d sections", lesson.id, name, words, bud[name], len(parts), len(lengthplan.SECTIONS))
+        if saved and lengthplan.within(words, bud[name]):  # cross-section repetition is repaired at stitch time, so a retry never regenerates this section
             work_dir.mkdir(parents=True, exist_ok=True)
             saved.write_text(json.dumps({"key": key, "words": words, "budget": bud[name], "scenes": [x.model_dump() for x in out.scenes]}))
-        covered += [s.on_screen_text or s.type for s in out.scenes]
+        covered += [_covered_note(s) for s in out.scenes]
     dup = lengthplan.repetition_issues([x for p_ in parts.values() for x in p_])
+    for _ in range(2):  # repair leftovers (e.g. a later section echoing the intro) section by section instead of discarding hours of generation
+        if not dup:
+            break
+        done: list[Scene] = []
+        for name, _f, _g in lengthplan.SECTIONS:
+            fixed = _make_distinct(llm, lesson, name, done, SectionOut(scenes=parts[name]))
+            parts[name] = fixed.scenes
+            done += fixed.scenes
+        dup = lengthplan.repetition_issues([x for p_ in parts.values() for x in p_])
     if dup:
         raise LLMError("stitched storyboard repeats itself: " + "; ".join(dup[:3]))
     flat = [s for name, _f, _g in lengthplan.SECTIONS for s in parts[name]]

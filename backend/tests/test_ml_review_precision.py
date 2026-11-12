@@ -178,6 +178,22 @@ def test_guessed_or_searched_urls_that_do_not_load_are_not_stored(db, monkeypatc
     assert "https://docs.python.org/nope" in urls  # a URL the user supplied is shown even if it failed, so they can see why
 
 
+def test_model_chosen_kind_cannot_bypass_the_unloaded_url_filter(db, monkeypatch):
+    """Regression: the model labelled a hallucinated repo URL kind="github", so collect() stored the 404 and the script cited it."""
+    from app.services import generation
+
+    class Llm:
+        name = "ollama"
+    sugg = generation.SourceSuggestions(sources=[generation.SourceSuggestion(kind="github", title="BH", url="https://github.com/BloodHoundPy/BloodHound")])
+    monkeypatch.setattr(generation, "_ask", lambda *a, **k: sugg)
+    l = make_lesson(db, source=False)
+    wanted = research.suggest_urls(Llm(), l, "security")
+    assert wanted and all(k == "model_suggested" for k, _, _ in wanted)
+    bad = {"status": "http_error", "verified": False, "excerpt": "HTTP 404", "full_text": ""}
+    monkeypatch.setattr(research, "fetch_source", lambda url, q="": bad)
+    assert "https://github.com/BloodHoundPy/BloodHound" not in {s.url for s in research.collect(db, l, wanted)}
+
+
 # ---------------- blocking policy calibration (server-side) ----------------
 OBJ_COVERED = "Understand data, features, labels and models"
 OBJ_MISSING = "Explain gradient descent optimization of the loss function"
